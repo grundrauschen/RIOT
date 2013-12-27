@@ -9,3 +9,4 @@ doc/doxygen/*.log
 .*.swp
 cpu/stm32_common/STM32F4xx_DSP_StdPeriph_Lib_V1.1.0/
 cpu/stm32_common/stm32f4_dsp_stdperiph_lib.zip
+cpu/stm32_common/STM32F4xx_DSP_StdPeriph_Lib_V1.3.0/
