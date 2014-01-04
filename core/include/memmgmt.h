@@ -11,6 +11,8 @@
 #include <stddef.h>
 #include <bitarithm.h>
 #include "tcb.h"
+#include <bitarithm.h>
+#include <cpu.h>
 
 /** \brief Union type to access the MPU.TYPE Register
  *
@@ -32,15 +34,17 @@ typedef union {
 typedef union {
 	struct {
 		uint32_t ENABLE:1;		/*!< bit:	0		enables the MPU					*/
-		uint32_t HFNMIENA:1;		/*!< bit:	1		enables the MPU during Hardfault*/
+		uint32_t HFNMIENA:1;	/*!< bit:	1		enables the MPU during Hardfault*/
 		uint32_t PRIVDEFENA:1;	/*!< bit:	2		enables default memory map		*/
 		uint32_t _reserved0:29;	/*!< bit: 3..31		Reserved						*/
 	}b;							/*!< Structure used for bit access					*/
 	uint32_t w;					/*!< Value used for word access						*/
 }MPU_CTRL_Type;
 
+
 /** \brief Union type to access the MPU.RNR Register
  *
+ * TODO: REGION als uint8_t definieren?
  */
 typedef union {
 	struct {
@@ -83,5 +87,71 @@ typedef union {
 	}b;							/*!< Structure used for bit access					*/
 	uint32_t w;					/*!< Value used for word access						*/
 }MPU_RASR_Type;
+
+#define MPU_CTRL	((MPU_CTRL_Type *) MPU->CTRL)
+#define MPU_TYPE	((MPU_TYPE_Type *) MPU->TYPE)
+#define MPU_RNR 	((MPU_RNR_Type *) MPU->RNR)
+#define MPU_RBAR 	((MPU_RBAR_Type *) MPU->RBAR)
+#define MPU_RASR	((MPU_RASR_Type *) MPU->RASR)
+
+
+/**
+ * Handler routine for MPU-Interrupt
+ */
+void MemManage_Handler(void);
+
+/**
+ * Enables the MPU
+ */
+__STATIC_INLINE void __enable_MPU(void);
+
+/**
+ * Disables the MPU
+ */
+__STATIC_INLINE void __disable_MPU(void);
+
+
+/**
+ * Enables MPU during Hardfault
+ */
+__STATIC_INLINE void __enable_HFNMIENA(void);
+
+
+/**
+ * Disables MPU during Hardfault
+ */
+__STATIC_INLINE void __disable_HFNMIENA(void);
+
+/**
+ * Enables the Default Memory Map
+ */
+__STATIC_INLINE void __enable_PRIVDEFENA(void);
+
+/**
+ * Disables the Default Memory Map
+ */
+__STATIC_INLINE void __disable_PRIVDEFENA(void);
+
+/**
+ * Sets the REGION through the RBAR register
+ *
+ * @param[in]	region	Region Number (0-7)
+ */
+__STATIC_INLINE void __set_REGION_explicit(uint32_t region);
+
+/**
+ * Sets start address for a region
+ *
+ * @param[in]	rbar_reg	prepared MPU_RBAR_Type
+ */
+__STATIC_INLINE	void __set_Region(MPU_RBAR_Type *rbar_reg);
+
+/**
+ * Sets parameter of a region
+ *
+ * @param[in]	rasr_reg	prepared MPU_RASR_Type
+ */
+__STATIC_INLINE	void __set_RASR(MPU_RASR_Type *rasr_reg);
+
 
 #endif // _MEMORY_MGMT_H
