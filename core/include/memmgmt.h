@@ -88,11 +88,11 @@ typedef union {
 	uint32_t w;					/*!< Value used for word access						*/
 }MPU_RASR_Type;
 
-#define MPU_CTRL	((MPU_CTRL_Type *) MPU->CTRL)
-#define MPU_TYPE	((MPU_TYPE_Type *) MPU->TYPE)
-#define MPU_RNR 	((MPU_RNR_Type *) MPU->RNR)
-#define MPU_RBAR 	((MPU_RBAR_Type *) MPU->RBAR)
-#define MPU_RASR	((MPU_RASR_Type *) MPU->RASR)
+#define MPU_CTRL	((MPU_CTRL_Type *) &MPU->CTRL)
+#define MPU_TYPE	((MPU_TYPE_Type *) &MPU->TYPE)
+#define MPU_RNR 	((MPU_RNR_Type *) &MPU->RNR)
+#define MPU_RBAR 	((MPU_RBAR_Type *) &MPU->RBAR)
+#define MPU_RASR	((MPU_RASR_Type *) &MPU->RASR)
 
 
 /**

@@ -28,6 +28,7 @@ volatile MPU_RASR_Type *mpu_rasr = (MPU_RASR_Type *) MPU->RASR;
 */
 
 void  MemManage_Handler(void) {
+	NVIC_SystemReset();
 	printf("Memory Protection Violation: naughty thread!");
 }
 
