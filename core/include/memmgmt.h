@@ -72,7 +72,7 @@ typedef union {
 typedef union {
 	struct {
 		uint32_t ENABLE:1;		/*!< bit 	0		enables Region				*/
-		uint32_t SIZE:4;			/*!< bit	1..5	Size of Region -> formula	*/
+		uint32_t SIZE:5;		/*!< bit	1..5	Size of Region -> formula	*/
 		uint32_t _reserved0:2;	/*!< bit	6..7	Reserved					*/
 		uint32_t SRD:8;			/*!< bit	8..15	Subregion Disable Bit		*/
 		uint32_t B:1;			/*!< bit	16		one memory access attribute	*/
