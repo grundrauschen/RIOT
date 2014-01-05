@@ -16,7 +16,7 @@
 #define __CPU_H
 
 #include <stdbool.h>
-#include "stm32f4xx.h"
+#include <stm32f4xx.h>
 
 
 //#define F_CCO					288000000
