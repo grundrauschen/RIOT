@@ -100,15 +100,21 @@ void enable_and_secure_MPU(uint32_t *start_pointer, uint32_t size, uint32_t regi
 	temp_rasr.b.XN = 1; /* Instruction fetch forbidden */
 	temp_rasr.b.AP = 0b011; /* RW for privileged and unprivileged */
 
+	DEBUG("temp_rbar: %#010x\n", temp_rbar.w);
+	DEBUG("temp_rasr: %#010x\n", temp_rasr.w);
+
 	__DSB(); /* Memory barriers */
 	__ISB();
 
 	MPU_RBAR->w = temp_rbar.w;
 	MPU_RASR->w = temp_rasr.w;
+	DEBUG("MPU_RBAR: %#010x\n", MPU_RBAR->w);
+	DEBUG("MPU_RASR: %#010x\n", MPU_RASR->w);
+
 
 	__enable_PRIVDEFENA();
 	__disable_HFNMIENA();
 	__enable_MPU();
-	DEBUG("MPU Enabled ------");
+	DEBUG("MPU Enabled ------\n");
 
 }
