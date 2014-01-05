@@ -67,3 +67,48 @@ __STATIC_INLINE	void __set_Region(MPU_RBAR_Type *rbar_reg) {
 __STATIC_INLINE	void __set_RASR(MPU_RASR_Type *rasr_reg) {
 	*MPU_RASR = *rasr_reg;
 }
+
+void enable_and_secure_MPU(uint32_t *start_pointer, uint32_t size, uint32_t region){
+	uint32_t start = (uint32_t) start_pointer;
+	DEBUG("MPU ---------------\nStartpointer to protect: %#010x\n", start);
+	/* We save 512 Bytes = n
+	 * n = 2^(size + 1)
+	 *
+	 * start has to be aligned
+	 * TODO: Muss später gesichert werden, hier nur testweise. (unsicher!)
+	 * start uses bit 31:N N=log2 (n)
+	 * somit N=size+1
+	 */
+	start = start >> (size + 1);
+	DEBUG("aligned startpointer: %#010x\n", start);
+
+	MPU_RBAR_Type temp_rbar;
+	temp_rbar.w = 0;
+	temp_rbar.b.REGION = region;
+	temp_rbar.b.VALID = 1;
+	temp_rbar.b.ADDRESS = start;
+
+	MPU_RASR_Type temp_rasr;
+	temp_rasr.w = 0;
+	temp_rasr.b.SIZE = size;
+	temp_rasr.b.ENABLE = 1;
+	temp_rasr.b.SRD = 0; /* no subregions disabled */
+	temp_rasr.b.B = 0; /* according to book */
+	temp_rasr.b.C = 1; /* according to book */
+	temp_rasr.b.S = 1; /* according to book */
+	temp_rasr.b.TEX = 0b000; /* according to book */
+	temp_rasr.b.XN = 1; /* Instruction fetch forbidden */
+	temp_rasr.b.AP = 0b011; /* RW for privileged and unprivileged */
+
+	__DSB(); /* Memory barriers */
+	__ISB();
+
+	MPU_RBAR->w = temp_rbar.w;
+	MPU_RASR->w = temp_rasr.w;
+
+	__enable_PRIVDEFENA();
+	__disable_HFNMIENA();
+	__enable_MPU();
+	DEBUG("MPU Enabled ------");
+
+}

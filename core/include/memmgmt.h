@@ -153,5 +153,9 @@ __STATIC_INLINE	void __set_Region(MPU_RBAR_Type *rbar_reg);
  */
 __STATIC_INLINE	void __set_RASR(MPU_RASR_Type *rasr_reg);
 
+/**
+ * Enables the MPU and protects the Area
+ */
+void enable_and_secure_MPU(uint32_t *start_pointer, uint32_t size, uint32_t region);
 
 #endif // _MEMORY_MGMT_H
