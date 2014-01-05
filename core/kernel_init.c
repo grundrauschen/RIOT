@@ -26,6 +26,7 @@
 #include <cpu.h>
 #include <lpm.h>
 #include <thread.h>
+#include <memmgmt.h>
 
 #ifdef MODULE_AUTO_INIT
 #include <auto_init.h>
@@ -74,6 +75,9 @@ void kernel_init(void)
 
     if (thread_create(main_stack, sizeof(main_stack), PRIORITY_MAIN, CREATE_WOUT_YIELD | CREATE_STACKTEST, MAIN_FUNC, main_name) < 0) {
         printf("kernel_init(): error creating main task.\n");
+    }
+    else {
+    	enable_and_secure_MPU((uint32_t *)main_stack, 8,1);
     }
 
     printf("kernel_init(): jumping into first task...\n");
