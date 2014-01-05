@@ -109,6 +109,8 @@ void enable_and_secure_MPU(uint32_t *start_pointer, uint32_t size, uint32_t regi
 
 	MPU_RBAR->w = temp_rbar.w;
 	MPU_RASR->w = temp_rasr.w;
+	DEBUG("Address of MPU_RBAR: %#010x\n", &MPU_RBAR->w);
+	DEBUG("Address of MPU_RASR: %#010x\n", &MPU_RASR->w);
 	DEBUG("MPU_RBAR: %#010x\n", MPU_RBAR->w);
 	DEBUG("MPU_RASR: %#010x\n", MPU_RASR->w);
 
