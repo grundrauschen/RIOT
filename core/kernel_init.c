@@ -77,10 +77,11 @@ void kernel_init(void)
         printf("kernel_init(): error creating main task.\n");
     }
     else {
-    	enable_and_secure_MPU((uint32_t *)main_stack, 8,1);
+    	enable_and_secure_MPU((uint32_t *)main_stack+0x10, 4,1);
     }
 
     printf("kernel_init(): jumping into first task...\n");
+    printf("SCB-MMFAR Address: %#010x\n", &SCB->MMFAR);
 
     cpu_switch_context_exit();
 }
