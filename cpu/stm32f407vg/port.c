@@ -43,6 +43,11 @@ void thread_yield(void) {
 	SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
 }
 
+__attribute__((naked))void MemManage_Handler(void) {
+	NVIC_SystemReset();
+	printf("Memory Protection Violation: naughty thread!");
+}
+
 __attribute__((naked))void PendSV_Handler(void)
 {
 	save_context();

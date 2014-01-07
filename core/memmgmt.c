@@ -27,10 +27,11 @@ volatile MPU_RBAR_Type *mpu_rbar = (MPU_RBAR_Type *) MPU->RBAR;
 volatile MPU_RASR_Type *mpu_rasr = (MPU_RASR_Type *) MPU->RASR;
 */
 
-void __attribute__((__interrupt__)) MemManage_Handler(void) {
+/*
+void __attribute__(( naked )) MemManage_Handler(void) {
 	printf("Memory Protection Violation: naughty thread!");
 }
-
+*/
 
 __STATIC_INLINE void __enable_MPU(void) {
 	MPU_CTRL->b.ENABLE = 1;
@@ -99,7 +100,7 @@ void enable_and_secure_MPU(uint32_t *start_pointer, uint32_t size, uint32_t regi
 	temp_rasr.b.S = 1; /* according to book */
 	temp_rasr.b.TEX = 0b000; /* according to book */
 	temp_rasr.b.XN = 1; /* Instruction fetch forbidden */
-	temp_rasr.b.AP = 0b011; /* RW for privileged and unprivileged */
+	temp_rasr.b.AP = 0b110; /* RW for privileged and unprivileged */
 
 	DEBUG("temp_rbar: %#010x\n", temp_rbar.w);
 	DEBUG("temp_rasr: %#010x\n", temp_rasr.w);

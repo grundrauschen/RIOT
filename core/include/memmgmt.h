@@ -98,7 +98,7 @@ typedef union {
 /**
  * Handler routine for MPU-Interrupt
  */
-void MemManage_Handler(void);
+/*void MemManage_Handler(void);*/
 
 /**
  * Enables the MPU
