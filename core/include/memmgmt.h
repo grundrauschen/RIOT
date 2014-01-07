@@ -158,4 +158,9 @@ __STATIC_INLINE	void __set_RASR(MPU_RASR_Type *rasr_reg);
  */
 void enable_and_secure_MPU(uint32_t *start_pointer, uint32_t size, uint32_t region);
 
+/**
+ * Sets threads to unprivileged
+ */
+void enable_unprivileged_mode(void);
+
 #endif // _MEMORY_MGMT_H

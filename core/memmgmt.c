@@ -27,8 +27,7 @@ volatile MPU_RBAR_Type *mpu_rbar = (MPU_RBAR_Type *) MPU->RBAR;
 volatile MPU_RASR_Type *mpu_rasr = (MPU_RASR_Type *) MPU->RASR;
 */
 
-void  MemManage_Handler(void) {
-	NVIC_SystemReset();
+void __attribute__((__interrupt__)) MemManage_Handler(void) {
 	printf("Memory Protection Violation: naughty thread!");
 }
 
@@ -80,7 +79,8 @@ void enable_and_secure_MPU(uint32_t *start_pointer, uint32_t size, uint32_t regi
 	 * start uses bit 31:N N=log2 (n)
 	 * somit N=size+1
 	 */
-	start = start >> (size + 1);
+	start = start >> 5;
+	start = start & (0xFFFFFFFF << (size - 4));
 	DEBUG("aligned startpointer: %#010x\n", start);
 
 	MPU_RBAR_Type temp_rbar;
@@ -119,5 +119,17 @@ void enable_and_secure_MPU(uint32_t *start_pointer, uint32_t size, uint32_t regi
 	__disable_HFNMIENA();
 	__enable_MPU();
 	DEBUG("MPU Enabled ------\n");
+	DEBUG("MPU_CTRL: %#010x\n", MPU_CTRL->w);
+	DEBUG("MPU_RNR: %#010x\n", MPU_RNR->w);
 
+}
+
+void enable_unprivileged_mode(void) {
+	CONTROL_Type mode;
+	mode.w = __get_CONTROL();
+
+	mode.b.SPSEL = 1; // select PSP
+	mode.b.nPRIV = 1; // privilege
+
+	__set_CONTROL(mode.w);
 }
