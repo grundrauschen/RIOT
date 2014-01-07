@@ -170,8 +170,6 @@ void SystemInit(void)
   /* Disable all interrupts */
   RCC->CIR = 0x00000000;
 
-  /* Set MPU Interrupt */
-  NVIC_EnableIRQ(MemoryManagement_IRQn);
 
   /* Configure the System clock source, PLL Multiplier and Divider factors, 
      AHB/APBx prescalers and Flash settings ----------------------------------*/
