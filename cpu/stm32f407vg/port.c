@@ -43,8 +43,10 @@ void thread_yield(void) {
 	SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
 }
 
-__attribute__((naked))void MemManage_Handler(void) {
-	NVIC_SystemReset();
+void MemManage_Handler(void) {
+	while(1){
+
+	}
 	printf("Memory Protection Violation: naughty thread!");
 }
 
@@ -181,4 +183,83 @@ char *thread_stack_init(void (*task_func)(void), void *stack_start, int stack_si
 	*stk = (unsigned int) 0xfffffffd; // return to taskmode main stack pointer
 
 	return (char*) stk;
+}
+
+
+/*----------------------------------------------------------------------------------------*/
+/**
+  * @brief   This function handles NMI exception.
+  * @param  None
+  * @retval None
+  */
+void NMI_Handler(void)
+{
+}
+
+/**
+  * @brief  This function handles Hard Fault exception.
+  * @param  None
+  * @retval None
+  */
+void HardFault_Handler(void)
+{
+  /* Go to infinite loop when Hard Fault exception occurs */
+  while (1)
+  {
+  }
+}
+
+
+/**
+  * @brief  This function handles Bus Fault exception.
+  * @param  None
+  * @retval None
+  */
+void BusFault_Handler(void)
+{
+  /* Go to infinite loop when Bus Fault exception occurs */
+  while (1)
+  {
+  }
+}
+
+/**
+  * @brief  This function handles Usage Fault exception.
+  * @param  None
+  * @retval None
+  */
+void UsageFault_Handler(void)
+{
+  /* Go to infinite loop when Usage Fault exception occurs */
+  while (1)
+  {
+  }
+}
+
+/**
+  * @brief  This function handles SVCall exception.
+  * @param  None
+  * @retval None
+  */
+void SVC_Handler(void)
+{
+	while (1)
+	{
+	}
+}
+
+/**
+  * @brief  This function handles Debug Monitor exception.
+  * @param  None
+  * @retval None
+  */
+void DebugMon_Handler(void)
+{
+}
+
+void WWDG_IRQHandler(void){
+	/* Go to infinite loop when Usage Fault exception occurs */
+	  while (1)
+	  {
+	  }
 }
