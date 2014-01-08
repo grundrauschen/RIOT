@@ -44,10 +44,12 @@ void thread_yield(void) {
 }
 
 void MemManage_Handler(void) {
-	while(1){
 
-	}
 	printf("Memory Protection Violation: naughty thread!");
+	__ISB();
+	__DSB();
+	while(1);
+/*	NVIC_SystemReset(); */
 }
 
 __attribute__((naked))void PendSV_Handler(void)

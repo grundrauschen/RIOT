@@ -118,6 +118,11 @@ void enable_and_secure_MPU(uint32_t *start_pointer, uint32_t size, uint32_t regi
 
 	__enable_PRIVDEFENA();
 	__disable_HFNMIENA();
+	/**
+	 * Set Primask for interrupts
+	 */
+	__set_PRIMASK(0x0);
+
 	/*	NVIC_EnableIRQ (MemoryManagement_IRQn);	Wrong !	Do not use this for cortex Processor exceptions
 	 * Look at Source Code from "The Designers Guide to the Cortex-M Processor Family
 	 */
