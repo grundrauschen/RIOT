@@ -79,7 +79,7 @@ void kernel_init(void)
     else {
     	enable_and_secure_MPU((uint32_t *)main_stack+0x10, 4,1);
     }
-
+    eINT();
     printf("kernel_init(): jumping into first task...\n");
     printf("SCB-MMFAR Address: %#010x\n", &SCB->MMFAR);
 
