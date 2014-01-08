@@ -100,7 +100,7 @@ void enable_and_secure_MPU(uint32_t *start_pointer, uint32_t size, uint32_t regi
 	temp_rasr.b.S = 1; /* according to book */
 	temp_rasr.b.TEX = 0b000; /* according to book */
 	temp_rasr.b.XN = 1; /* Instruction fetch forbidden */
-	temp_rasr.b.AP = 0b110; /* RW for privileged and unprivileged */
+	temp_rasr.b.AP = 0b001; /* RW for privileged and unprivileged */
 
 	DEBUG("temp_rbar: %#010x\n", temp_rbar.w);
 	DEBUG("temp_rasr: %#010x\n", temp_rasr.w);
