@@ -35,6 +35,7 @@ __irq_stack_size__     = 0x2000;
 /* Generate a link error if heap and stack don't fit into RAM */
 _Min_Heap_Size = 0;      /* required amount of heap  */
 _Min_Stack_Size = 0x400; /* required amount of stack */
+_User_Stack_Size = 0x4000; /* 16kiB User Stack space */
 
 /* Specify the memory areas */
 MEMORY
@@ -150,6 +151,16 @@ SECTIONS
     __bss_end__ = _ebss;
   } >RAM
 
+/* Userprocess Stack (managed)*/
+  ._user_stack :
+  {
+    . = ALIGN(4);
+    PROVIDE (user_stack_start = ABSOLUTE(.));
+    . = . + _User_Stack_Size;
+    . = ALIGN(4);
+    PROVIDE (user_stack_end = ABSOLUTE(.));
+  } >RAM
+
   /* User_heap_stack section, used to check that there is enough RAM left */
   
   __heap1_size = ORIGIN(RAM) + LENGTH(RAM) - . ;/*- __stack_size;*/
@@ -159,6 +170,9 @@ SECTIONS
 		. = . + __heap1_size;
 		PROVIDE(__heap1_max = .);	
 	} > RAM	
+
+  
+    	
 	
   /*
   ._user_heap_stack :

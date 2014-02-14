@@ -62,10 +62,22 @@ static char idle_stack[KERNEL_CONF_STACKSIZE_IDLE];
 #define MAIN_FUNC ((void (*) (void))  main)
 #endif
 
+extern const uint32_t user_stack_end;
+extern const uint32_t user_stack_start;
+
 void kernel_init(void)
 {
     dINT();
     printf("kernel_init(): This is RIOT! (Version: %s)\n", VERSION);
+
+    uint32_t stack_size = 0;
+    uint32_t start = (uint32_t) &user_stack_start;
+    uint32_t end = (uint32_t) &user_stack_end;
+    stack_size = end;
+    stack_size -= start;
+    printf("User_Stack_start: %#010x\n", &user_stack_start);
+    printf("User_Stack_end: %#010x\n", &user_stack_end);
+    printf("Userprocess Stack Size: %d\n", stack_size);
 
     sched_init();
 
