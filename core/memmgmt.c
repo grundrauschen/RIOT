@@ -119,6 +119,27 @@ memory_block_Type* add_block(memory_block_Type current_block , uint32_t *block_s
 	return NULL;
 }
 
+void free_block(memory_block_Type *this_block){
+	memory_block_Type *i_block = &first_mem_block;
+	while (i_block->next_block != this_block){
+		i_block = i_block->next_block;
+	}
+	if (i_block != NULL){
+		if (this_block->next_block->is_free = 1){
+			this_block->end_address = this_block->next_block->end_address;
+			this_block->next_block = this_block->next_block->next_block;
+			this_block->is_free = 1;
+		}
+		else if (i_block->is_free == 1){
+			i_block->next_block = this_block->next_block;
+			i_block->end_address = this_block->end_address;
+		}
+		else {
+			this_block->is_free = 1;
+		}
+	}
+}
+
 /** \brief calculates wheather x is power of 2 with bitmagic
  *
  * from: https://stackoverflow.com/questions/3638431/determine-if-an-int-is-a-power-of-2-or-not-in-a-single-line
