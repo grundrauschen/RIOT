@@ -24,10 +24,10 @@ extern const uint32_t user_stack_start;
 
 static uint32_t mgmt_mem_start = (uint32_t) &user_stack_start;
 static uint32_t mgmt_mem_end = (uint32_t) &user_stack_end;
-static mem_initialized = 0;
+static int mem_initialized = 0;
 
 void init_memory_mgmt(void) {
-	memory_block_Type *mem_start = first_mem_block;
+	memory_block_Type *mem_start = &first_mem_block;
 	mem_start->end_address = (uint32_t *) mgmt_mem_end;
 	mem_start->start_address = (uint32_t *) mgmt_mem_start;
 	mem_start->next_block = NULL;
@@ -71,7 +71,7 @@ memory_block_Type* create_mem_block(uint32_t size){
 	return NULL;
 }
 
-memory_block_Type* add_block(memory_block_Type current_block , uint32_t *block_start_address, uint32_t *block_end_address ){
+memory_block_Type* add_block(memory_block_Type *current_block , uint32_t *block_start_address, uint32_t *block_end_address ){
 	if (current_block->start_address == block_start_address){
 		/* same start address */
 		if (current_block->next_block->start_address == block_end_address + 1){
@@ -80,11 +80,11 @@ memory_block_Type* add_block(memory_block_Type current_block , uint32_t *block_s
 			return current_block;
 		}
 		else {
-			memory_block_Type next_block;
-			next_block->end_address = current_block->end_address;
-			next_block->next_block = current_block->next_block;
-			next_block->start_address = block_end_address + 1;
-			next_block->is_free = 1;
+			static memory_block_Type next_block;
+			next_block.end_address = current_block->end_address;
+			next_block.next_block = current_block->next_block;
+			next_block.start_address = block_end_address + 1;
+			next_block.is_free = 1;
 			current_block->end_address = block_end_address;
 			current_block->is_free = 0;
 			return current_block;
@@ -92,31 +92,30 @@ memory_block_Type* add_block(memory_block_Type current_block , uint32_t *block_s
 	}
 	else {
 		if (current_block->next_block->start_address == block_end_address + 1){
-			memory_block_Type next_block;
-			next_block->end_address = block_end_address;
-			next_block->start_address = block_start_address;
-			next_block->next_block = current_block->next_block;
-			next_block->is_free = 0;
+			static memory_block_Type next_block;
+			next_block.end_address = block_end_address;
+			next_block.start_address = block_start_address;
+			next_block.next_block = current_block->next_block;
+			next_block.is_free = 0;
 			current_block->end_address = block_start_address - 1;
 			current_block->next_block = &next_block;
-			return next_block;
+			return &next_block;
 		}
 		else {
-			memory_block_Type next_block, after_block;
-			after_block->next_block = current_block->next_block;
-			after_block->is_free = 1;
-			after_block->end_address = current_block->next_block->start_address - 1;
-			after_block->start_address = block_end_address + 1;
-			next_block->next_block = &after_block;
-			next_block->end_address = block_end_address;
-			next_block->start_address = block_start_address;
-			next_block->is_free = 0;
+			static memory_block_Type next_block, after_block;
+			after_block.next_block = current_block->next_block;
+			after_block.is_free = 1;
+			after_block.end_address = current_block->next_block->start_address - 1;
+			after_block.start_address = block_end_address + 1;
+			next_block.next_block = &after_block;
+			next_block.end_address = block_end_address;
+			next_block.start_address = block_start_address;
+			next_block.is_free = 0;
 			current_block->next_block = &next_block;
 			current_block->end_address = block_start_address - 1;
-			return next_block;
+			return &next_block;
 		}
 	}
-	return NULL;
 }
 
 void free_block(memory_block_Type *this_block){
@@ -125,7 +124,7 @@ void free_block(memory_block_Type *this_block){
 		i_block = i_block->next_block;
 	}
 	if (i_block != NULL){
-		if (this_block->next_block->is_free = 1){
+		if (this_block->next_block->is_free == 1){
 			this_block->end_address = this_block->next_block->end_address;
 			this_block->next_block = this_block->next_block->next_block;
 			this_block->is_free = 1;
@@ -145,7 +144,7 @@ void free_block(memory_block_Type *this_block){
  * from: https://stackoverflow.com/questions/3638431/determine-if-an-int-is-a-power-of-2-or-not-in-a-single-line
  *
  */
-__STATIC_INLINE int ispowerof2(uint32_t x){
+__INLINE int ispowerof2(uint32_t x){
 	return x && !(x & (x-1));
 }
 

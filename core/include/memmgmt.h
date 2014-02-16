@@ -14,7 +14,6 @@
 #include <bitarithm.h>
 #include <cpu.h>
 
-static memory_block_Type first_mem_block;
 
 /** \brief Union type to access the MPU.TYPE Register
  *
@@ -90,15 +89,19 @@ typedef union {
 	uint32_t w;					/*!< Value used for word access						*/
 }MPU_RASR_Type;
 
+typedef struct memory_block memory_block_Type;
+
 /** \brief management type for memory blocks
  *
  */
-typedef struct {
+struct memory_block{
 	memory_block_Type *next_block;		/* Pointer to next memory block */
 	uint32_t is_free;			/* shows wheather block is free */
 	uint32_t *start_address;	/* Begin of the block			*/
 	uint32_t *end_address;		/* End of the block				*/
-}memory_block_Type;
+};
+
+static memory_block_Type first_mem_block;
 
 #define MPU_CTRL	((MPU_CTRL_Type *) &MPU->CTRL)
 #define MPU_TYPE	((MPU_TYPE_Type *) &MPU->TYPE)
