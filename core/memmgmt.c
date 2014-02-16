@@ -19,6 +19,115 @@
 #define ENABLE_DEBUG (1)
 #include <debug.h>
 
+extern const uint32_t user_stack_end;
+extern const uint32_t user_stack_start;
+
+static uint32_t mgmt_mem_start = (uint32_t) &user_stack_start;
+static uint32_t mgmt_mem_end = (uint32_t) &user_stack_end;
+static mem_initialized = 0;
+
+void init_memory_mgmt(void) {
+	memory_block_Type *mem_start = first_mem_block;
+	mem_start->end_address = (uint32_t *) mgmt_mem_end;
+	mem_start->start_address = (uint32_t *) mgmt_mem_start;
+	mem_start->next_block = NULL;
+	mem_start->is_free = 1;
+	mem_initialized = 1;
+}
+
+memory_block_Type* create_mem_block(uint32_t size){
+	memory_block_Type *this_block;
+	unsigned int further_block = 0;
+	if (mem_initialized){
+		this_block = &first_mem_block;
+		further_block = 1;
+	}
+	else {
+		return NULL;
+	}
+	if (ispowerof2(size)){
+		while (further_block) {
+			if (this_block->is_free && (((uint32_t) this_block->end_address - (uint32_t) this_block->start_address) > size )){
+				/* if it fits, it sits */
+				if (((uint32_t) this_block->start_address & (size - 1)) == 0 ){
+					uint32_t *end_address = this_block->start_address + (size-1);
+					return add_block(this_block, this_block->start_address, end_address);
+				}
+				else {
+					/* align address */
+					uint32_t temp_address;
+					temp_address = (uint32_t) this_block->start_address & ((size - 1) ^ 0xffffffff );
+					if ((uint32_t) this_block->end_address - temp_address < size){
+						uint32_t *end_address = (uint32_t *) (temp_address + (size-1));
+						return add_block(this_block, (uint32_t *)temp_address, end_address);
+					}
+				}
+			}
+			if (this_block->next_block == NULL){
+				further_block = 0;
+			}
+		}
+	}
+	return NULL;
+}
+
+memory_block_Type* add_block(memory_block_Type current_block , uint32_t *block_start_address, uint32_t *block_end_address ){
+	if (current_block->start_address == block_start_address){
+		/* same start address */
+		if (current_block->next_block->start_address == block_end_address + 1){
+			/* same block */
+			current_block->is_free = 0;
+			return current_block;
+		}
+		else {
+			memory_block_Type next_block;
+			next_block->end_address = current_block->end_address;
+			next_block->next_block = current_block->next_block;
+			next_block->start_address = block_end_address + 1;
+			next_block->is_free = 1;
+			current_block->end_address = block_end_address;
+			current_block->is_free = 0;
+			return current_block;
+		}
+	}
+	else {
+		if (current_block->next_block->start_address == block_end_address + 1){
+			memory_block_Type next_block;
+			next_block->end_address = block_end_address;
+			next_block->start_address = block_start_address;
+			next_block->next_block = current_block->next_block;
+			next_block->is_free = 0;
+			current_block->end_address = block_start_address - 1;
+			current_block->next_block = &next_block;
+			return next_block;
+		}
+		else {
+			memory_block_Type next_block, after_block;
+			after_block->next_block = current_block->next_block;
+			after_block->is_free = 1;
+			after_block->end_address = current_block->next_block->start_address - 1;
+			after_block->start_address = block_end_address + 1;
+			next_block->next_block = &after_block;
+			next_block->end_address = block_end_address;
+			next_block->start_address = block_start_address;
+			next_block->is_free = 0;
+			current_block->next_block = &next_block;
+			current_block->end_address = block_start_address - 1;
+			return next_block;
+		}
+	}
+	return NULL;
+}
+
+/** \brief calculates wheather x is power of 2 with bitmagic
+ *
+ * from: https://stackoverflow.com/questions/3638431/determine-if-an-int-is-a-power-of-2-or-not-in-a-single-line
+ *
+ */
+__STATIC_INLINE int ispowerof2(uint32_t x){
+	return x && !(x & (x-1));
+}
+
 /*
 MPU_CTRL_Type *mpu_ctrl = (MPU_CTRL_Type *) MPU->CTRL;
 volatile MPU_TYPE_Type *mpu_type = (MPU_TYPE_Type *) MPU->TYPE;
