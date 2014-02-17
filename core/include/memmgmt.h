@@ -99,19 +99,26 @@ struct memory_block{
 	memory_block_Type *next_block;		/* Pointer to next memory block */
 	uint32_t block_used;		/* block in use					*/
 	uint32_t is_free;			/* shows wheather block is free */
-	uint32_t *start_address;	/* Begin of the block			*/
-	uint32_t *end_address;		/* End of the block				*/
+	uint8_t *start_address;	/* Begin of the block			*/
+	uint8_t *end_address;		/* End of the block				*/
 	uint32_t id;				/* id of Block					*/
 };
 
 static memory_block_Type *first_mem_block;
 static memory_block_Type block_array[BLOCKCOUNT];
 
+void init_memory_mgmt(void);
+memory_block_Type* create_mem_block(uint32_t);
+void free_mem_block(memory_block_Type *);
+
+/* ************************** MPU ************************************************ */
+
 #define MPU_CTRL	((MPU_CTRL_Type *) &MPU->CTRL)
 #define MPU_TYPE	((MPU_TYPE_Type *) &MPU->TYPE)
 #define MPU_RNR 	((MPU_RNR_Type *) &MPU->RNR)
 #define MPU_RBAR 	((MPU_RBAR_Type *) &MPU->RBAR)
 #define MPU_RASR	((MPU_RASR_Type *) &MPU->RASR)
+
 
 
 /**
