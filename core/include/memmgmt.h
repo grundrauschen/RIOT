@@ -14,6 +14,7 @@
 #include <bitarithm.h>
 #include <cpu.h>
 
+#define BLOCKCOUNT 50
 
 /** \brief Union type to access the MPU.TYPE Register
  *
@@ -96,12 +97,15 @@ typedef struct memory_block memory_block_Type;
  */
 struct memory_block{
 	memory_block_Type *next_block;		/* Pointer to next memory block */
+	uint32_t block_used;		/* block in use					*/
 	uint32_t is_free;			/* shows wheather block is free */
 	uint32_t *start_address;	/* Begin of the block			*/
 	uint32_t *end_address;		/* End of the block				*/
+	uint32_t id;				/* id of Block					*/
 };
 
-static memory_block_Type first_mem_block;
+static memory_block_Type *first_mem_block;
+static memory_block_Type block_array[BLOCKCOUNT];
 
 #define MPU_CTRL	((MPU_CTRL_Type *) &MPU->CTRL)
 #define MPU_TYPE	((MPU_TYPE_Type *) &MPU->TYPE)
