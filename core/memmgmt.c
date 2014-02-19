@@ -15,6 +15,7 @@
 #include <kernel.h>
 #include <bitarithm.h>
 #include <cpu.h>
+#include <math.h>
 
 #define ENABLE_DEBUG (1)
 #include <debug.h>
@@ -181,7 +182,39 @@ void free_mem_block(memory_block_Type *this_block){
 	}
 }
 
+/* **************************** MEM_PROP ************************************ */
 
+static uint32_t calculate_size(uint32_t *size){
+	if(ispowerof2(*size)){
+		return log(*size) / log(2) - 1;
+	}
+	return 0;
+}
+
+unsigned int init_mem_prop(mem_block_prop prop[], memory_block_Type *stack){
+	/* Access to all memory parts -- only for debugging */
+	uint32_t n = MEMSIZE;
+	prop[0].AP = RW_RW;
+	prop[0].XN = 0;
+	prop[0].size = 256;
+	prop[0].start_address = 0;
+	/* safe stacks */
+	prop[1].AP = RW_RO;
+	prop[1].XN = 1;
+	prop[1].size = calculate_size(&n);
+	prop[1].start_address = first_mem_block->start_address;
+	/* make thread stack */
+	prop[2].AP = RW_RW;
+	prop[2].XN = 1;
+	uint32_t size = ((uint32_t) stack->end_address) - ((uint32_t) stack->start_address);
+	prop[2].size = calculate_size(&size);
+	prop[2].start_address = stack->start_address;
+	return 2;
+
+}
+
+
+/* **************************************** MPU ***************************** */
 /*
 MPU_CTRL_Type *mpu_ctrl = (MPU_CTRL_Type *) MPU->CTRL;
 volatile MPU_TYPE_Type *mpu_type = (MPU_TYPE_Type *) MPU->TYPE;

@@ -27,6 +27,7 @@
 #include <lpm.h>
 #include <thread.h>
 #include <memmgmt.h>
+#include <tcb_mgmt.h>
 
 #ifdef MODULE_AUTO_INIT
 #include <auto_init.h>
@@ -81,7 +82,11 @@ void kernel_init(void)
 
     sched_init();
 
+    init_tcb_storage();
+
     init_memory_mgmt();
+
+
     memory_block_Type *idle_stack_mgmt = create_mem_block(512);
     memory_block_Type *main_stack_mgmt = create_mem_block(8192);
 

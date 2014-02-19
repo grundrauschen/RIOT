@@ -21,6 +21,7 @@
 #include <clist.h>
 #include <cib.h>
 #include <msg.h>
+#include <memmgmt.h>
 
 /* uneven means has to be on runqueue */
 #define STATUS_NOT_FOUND 		(0x0000)
@@ -54,6 +55,31 @@ typedef struct tcb_t {
     char *stack_start;
     int stack_size;
 } tcb_t;
+
+typedef struct tcb_safe_t {
+	char *sp;
+	uint16_t status;
+
+	uint16_t pid;
+	uint16_t priority;
+
+	clist_node_t rq_entry;
+
+	void *wait_data;
+	queue_node_t msg_waiters;
+
+	cib_t msg_queue;
+	msg_t *msg_array;
+
+	const char *name;
+	memory_block_Type *memory;
+	uint16_t is_used;
+
+	mem_block_prop mem_block_props[8];
+	unsigned int max_block;
+	unsigned int stack_size;
+
+} tcb_safe_t;
 
 /** @} */
 #endif /* TCB_H_ */

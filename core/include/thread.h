@@ -15,6 +15,8 @@
 
 #include <kernel.h>
 #include <tcb.h>
+#include <tcb_mgmt.h>
+#include <memmgmt.h>
 
 /** Minimum stack size */
 #ifndef MINIMUM_STACK_SIZE
@@ -38,6 +40,8 @@
  * @return  returns <0 on error, pid of newly created task else.
 */
 int thread_create(char *stack, int stacksize, char priority, int flags, void (*function) (void), const char *name);
+
+
 
 /**
  * @brief   returns the status of a process.

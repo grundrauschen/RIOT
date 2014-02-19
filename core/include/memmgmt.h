@@ -10,11 +10,29 @@
 
 #include <stddef.h>
 #include <bitarithm.h>
-#include "tcb.h"
 #include <bitarithm.h>
 #include <cpu.h>
+#include <conf.h>
 
-#define BLOCKCOUNT 50
+#define NOACCESS 	0
+#define RW_NO 		1
+#define RW_RO		2
+#define RW_RW		3
+#define RO_NO		5
+#define RO_RO		6
+
+#define MEMSIZE 16384
+
+#define BLOCKCOUNT MAX_CON_THREADS
+
+typedef struct mem_block_prop {
+	uint8_t *start_address; 	/*!< startaddress to protect 	*/
+	uint32_t size;				/*!< size of protected block 	*/
+	uint16_t AP;				/*!< Access Permission			*/
+	uint16_t XN;				/*!< No Access					*/
+
+}mem_block_prop;
+
 
 /** \brief Union type to access the MPU.TYPE Register
  *
@@ -110,6 +128,8 @@ static memory_block_Type block_array[BLOCKCOUNT];
 void init_memory_mgmt(void);
 memory_block_Type* create_mem_block(uint32_t);
 void free_mem_block(memory_block_Type *);
+unsigned int init_mem_prop(mem_block_prop[], memory_block_Type*);
+
 
 /* ************************** MPU ************************************************ */
 
