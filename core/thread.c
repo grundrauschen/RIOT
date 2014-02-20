@@ -27,6 +27,7 @@
 #include "hwtimer.h"
 #include "sched.h"
 
+
 inline int thread_getpid()
 {
     return active_thread->pid;
@@ -118,11 +119,9 @@ int thread_measure_stack_usage(char *stack)
     return space;
 }
 
-int thread_create_safe(int stacksize, char priority, int flags, void (*function)(void), const char *name)
+int thread_create(int stacksize, char priority, int flags, void (*function)(void), const char *name)
 {
-	unsigned int stack_foo;
-	unsigned int *stack = &stack_foo;
-    tcb_safe_t *tcb = get_tcb();
+	tcb_t *tcb = get_tcb();
     memory_block_Type *thread_stack = create_mem_block(stacksize);
     tcb->memory = thread_stack;
 
@@ -136,17 +135,17 @@ int thread_create_safe(int stacksize, char priority, int flags, void (*function)
 
     if (flags & CREATE_STACKTEST) {
         /* assign each int of the stack the value of it's address */
-        unsigned int *stackmax = (unsigned int *)((uint32_t) tcb->memory->end_address)-((uint32_t) tcb->memory->start_address);
-        unsigned int *stackp = (unsigned int *)tcb->memory->end_address;
+        uint32_t *stackmin = (uint32_t *)tcb->memory->start_address;
+        uint32_t *stackp = (uint32_t *)tcb->memory->end_address;
 
-        while (stackp < stackmax) {
-            *stackp = (unsigned int)stackp;
-            stackp++;
+        while (stackp > stackmin) {
+            *stackp = (uint32_t) stackp;
+            stackp--;
         }
     }
     else {
         /* create stack guard */
-        *stack = (unsigned int)tcb->memory->end_address;
+        *tcb->memory->end_address = (unsigned int)tcb->memory->end_address;
     }
 
     if (!inISR()) {
@@ -224,119 +223,4 @@ int thread_create_safe(int stacksize, char priority, int flags, void (*function)
     return pid;
 }
 
-int thread_create(char *stack, int stacksize, char priority, int flags, void (*function)(void), const char *name)
-{
-    /* allocate our thread control block at the top of our stackspace */
-    int total_stacksize = stacksize;
-    stacksize -= sizeof(tcb_t);
-
-    /* align tcb address on 32bit boundary */
-    unsigned int tcb_address = (unsigned int) stack + stacksize;
-
-    if (tcb_address & 1) {
-        tcb_address--;
-        stacksize--;
-    }
-
-    if (tcb_address & 2) {
-        tcb_address -= 2;
-        stacksize -= 2;
-    }
-
-    tcb_t *cb = (tcb_t *) tcb_address;
-
-    if (priority >= SCHED_PRIO_LEVELS) {
-        return -EINVAL;
-    }
-
-    if (flags & CREATE_STACKTEST) {
-        /* assign each int of the stack the value of it's address */
-        unsigned int *stackmax = (unsigned int *)((char *)stack + stacksize);
-        unsigned int *stackp = (unsigned int *)stack;
-
-        while (stackp < stackmax) {
-            *stackp = (unsigned int)stackp;
-            stackp++;
-        }
-    }
-    else {
-        /* create stack guard */
-        *stack = (unsigned int)stack;
-    }
-
-    if (!inISR()) {
-        dINT();
-    }
-
-    int pid = 0;
-
-    while (pid < MAXTHREADS) {
-        if (sched_threads[pid] == NULL) {
-            sched_threads[pid] = cb;
-            cb->pid = pid;
-            break;
-        }
-
-        pid++;
-    }
-
-    if (pid == MAXTHREADS) {
-        DEBUG("thread_create(): too many threads!\n");
-
-        if (!inISR()) {
-            eINT();
-        }
-
-        return -EOVERFLOW;
-    }
-
-    cb->sp = thread_stack_init(function, stack, stacksize);
-    cb->stack_start = stack;
-    cb->stack_size = total_stacksize;
-
-    cb->priority = priority;
-    cb->status = 0;
-
-    cb->rq_entry.data = (unsigned int) cb;
-    cb->rq_entry.next = NULL;
-    cb->rq_entry.prev = NULL;
-
-    cb->name = name;
-
-    cb->wait_data = NULL;
-
-    cb->msg_waiters.data = 0;
-    cb->msg_waiters.priority = 0;
-    cb->msg_waiters.next = NULL;
-
-    cib_init(&(cb->msg_queue), 0);
-    cb->msg_array = NULL;
-
-    num_tasks++;
-
-    DEBUG("Created thread %s. PID: %u. Priority: %u.\n", name, cb->pid, priority);
-
-    if (flags & CREATE_SLEEPING) {
-        sched_set_status(cb, STATUS_SLEEPING);
-    }
-    else {
-        sched_set_status(cb, STATUS_PENDING);
-
-        if (!(flags & CREATE_WOUT_YIELD)) {
-            if (!inISR()) {
-                eINT();
-                thread_yield();
-            }
-            else {
-                sched_context_switch_request = 1;
-            }
-        }
-    }
-
-    if (!inISR() && active_thread != NULL) {
-        eINT();
-    }
-
-    return pid;
-}
 

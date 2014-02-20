@@ -36,6 +36,7 @@
 #define STATUS_REPLY_BLOCKED 	(0x0100)
 #define STATUS_TIMER_WAITING	(0x0200)
 
+/*
 typedef struct tcb_t {
     char *sp;
     uint16_t status;
@@ -55,8 +56,9 @@ typedef struct tcb_t {
     char *stack_start;
     int stack_size;
 } tcb_t;
+*/
 
-typedef struct tcb_safe_t {
+typedef struct tcb_t {
 	char *sp;
 	uint16_t status;
 
@@ -79,7 +81,7 @@ typedef struct tcb_safe_t {
 	unsigned int max_block;
 	unsigned int stack_size;
 
-} tcb_safe_t;
+} tcb_t;
 
 /** @} */
 #endif /* TCB_H_ */

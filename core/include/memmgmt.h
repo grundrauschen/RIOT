@@ -26,7 +26,7 @@
 #define BLOCKCOUNT MAX_CON_THREADS
 
 typedef struct mem_block_prop {
-	uint8_t *start_address; 	/*!< startaddress to protect 	*/
+	uint32_t *start_address; 	/*!< startaddress to protect 	*/
 	uint32_t size;				/*!< size of protected block 	*/
 	uint16_t AP;				/*!< Access Permission			*/
 	uint16_t XN;				/*!< No Access					*/
@@ -117,8 +117,8 @@ struct memory_block{
 	memory_block_Type *next_block;		/* Pointer to next memory block */
 	uint32_t block_used;		/* block in use					*/
 	uint32_t is_free;			/* shows wheather block is free */
-	uint8_t *start_address;	/* Begin of the block			*/
-	uint8_t *end_address;		/* End of the block				*/
+	uint32_t *start_address;	/* Begin of the block			*/
+	uint32_t *end_address;		/* End of the block				*/
 	uint32_t id;				/* id of Block					*/
 };
 

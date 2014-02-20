@@ -39,7 +39,7 @@
  *
  * @return  returns <0 on error, pid of newly created task else.
 */
-int thread_create(char *stack, int stacksize, char priority, int flags, void (*function) (void), const char *name);
+int thread_create(int stacksize, char priority, int flags, void (*function) (void), const char *name);
 
 
 

@@ -69,10 +69,10 @@ __INLINE int ispowerof2(uint32_t x){
 }
 
 
-memory_block_Type* add_block(memory_block_Type *current_block , uint8_t *block_start_address, uint8_t *block_end_address ){
+memory_block_Type* add_block(memory_block_Type *current_block , uint32_t *block_start_address, uint32_t *block_end_address ){
 	if (current_block->start_address == block_start_address){
 		/* same start address */
-		if (current_block->next_block->start_address == block_end_address + 1){
+		if (current_block->next_block->start_address == block_end_address + 4){
 			/* same block */
 			current_block->is_free = 0;
 			return current_block;
@@ -81,7 +81,7 @@ memory_block_Type* add_block(memory_block_Type *current_block , uint8_t *block_s
 			memory_block_Type *next_block = get_free_struct();
 			next_block->end_address = current_block->end_address;
 			next_block->next_block = current_block->next_block;
-			next_block->start_address = block_end_address + 1;
+			next_block->start_address = block_end_address + 4;
 			next_block->is_free = 1;
 			current_block->end_address = block_end_address;
 			current_block->is_free = 0;
@@ -89,13 +89,13 @@ memory_block_Type* add_block(memory_block_Type *current_block , uint8_t *block_s
 		}
 	}
 	else {
-		if (current_block->next_block != NULL && current_block->next_block->start_address == block_end_address + 1){
+		if (current_block->next_block != NULL && current_block->next_block->start_address == block_end_address + 4){
 			memory_block_Type *next_block = get_free_struct();
 			next_block->end_address = block_end_address;
 			next_block->start_address = block_start_address;
 			next_block->next_block = current_block->next_block;
 			next_block->is_free = 0;
-			current_block->end_address = block_start_address - 1;
+			current_block->end_address = block_start_address - 4;
 			current_block->next_block = next_block;
 			return next_block;
 		}
@@ -105,13 +105,13 @@ memory_block_Type* add_block(memory_block_Type *current_block , uint8_t *block_s
 			after_block->next_block = current_block->next_block;
 			after_block->is_free = 1;
 			after_block->end_address = current_block->end_address;
-			after_block->start_address = block_end_address + 1;
+			after_block->start_address = block_end_address + 4;
 			next_block->next_block = after_block;
 			next_block->end_address = block_end_address;
 			next_block->start_address = block_start_address;
 			next_block->is_free = 0;
 			current_block->next_block = next_block;
-			current_block->end_address = block_start_address - 1;
+			current_block->end_address = block_start_address - 4;
 			return next_block;
 		}
 	}
@@ -133,7 +133,7 @@ memory_block_Type* create_mem_block(uint32_t size){
 			if (this_block->is_free && (((uint32_t) this_block->end_address - (uint32_t) this_block->start_address) > size )){
 				/* if it fits, it sits */
 				if (((uint32_t) this_block->start_address & (size - 1)) == 0 ){
-					uint8_t *end_address = this_block->start_address + (size-1);
+					uint32_t *end_address = this_block->start_address + (size-1) - 3; /* aligned endadress */
 					return add_block(this_block, this_block->start_address, end_address);
 				}
 				else {
@@ -141,8 +141,8 @@ memory_block_Type* create_mem_block(uint32_t size){
 					uint32_t temp_address;
 					temp_address = (((uint32_t) this_block->start_address) & ((size - 1) ^ 0xffffffff )) + size;
 					if ((((uint32_t) this_block->end_address) - temp_address) > size){
-						uint8_t *end_address = (uint8_t *) (temp_address + (size-1));
-						return add_block(this_block, (uint8_t *)temp_address, end_address);
+						uint32_t *end_address = (uint32_t *) (temp_address + (size-1) - 3); /* aligned endadress */
+						return add_block(this_block, (uint32_t *)temp_address, end_address);
 					}
 				}
 			}
