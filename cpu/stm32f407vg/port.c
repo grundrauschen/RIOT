@@ -20,6 +20,7 @@
 #define PRIV_THREAD_MODE    0x0
 
 extern void fk_task_exit(void);
+extern void msg_send_svc(void *);
 
 unsigned int atomic_set_return(unsigned int* p, unsigned int uiVal) {
 	//unsigned int cspr = disableIRQ();		//crashes
@@ -59,6 +60,50 @@ __attribute__((naked))void PendSV_Handler(void)
 	asm("bl sched_run");
 	/* the thread that has higest priority and is in PENDING state */
 	restore_context();
+}
+
+/**
+  * @brief  This function handles SVCall exception.
+  *
+  * Copied from book: The Definitive Guide to ARM Cortex-M3 and ARM Cortex M4 - Joseph Yiu
+  *
+  * @param  None
+  * @retval None
+  */
+__attribute__((naked)) void SVC_Handler(void)
+{
+	asm("tst lr,#4"); 		/* Test bit 2 of EXC_RETURN	*/
+	asm("ite eq");
+	asm("mrseq ro, msp"); 	/* if 0, stacking used MSP, copy to R0	*/
+	asm("mrsne ro, psp");	/* if 1, stacking used PSP, copy to R0	*/
+	asm("b SVC_Handler_C");
+	asm("align 4");
+}
+
+void SVC_Handler_C(unsigned int *svc_args){
+	uint8_t svc_number;
+	uint32_t stacked_r0; /* , stacked_r1, stacked_r2, stacked_r3, stacked_r12, stacked_lr, stacked_pc, stacked_xpsr */
+
+	svc_number = ((char *) svc_args[6])[-2]; /* Memory[(Stacked PC)-2] */
+	stacked_r0 = svc_args[0];
+	/*
+	stacked_r1 = svc_args[1];
+	stacked_r2 = svc_args[2];
+	stacked_r3 = svc_args[3];
+	stacked_r12 = svc_args[4];
+	stacked_lr = svc_args[5];
+	stacked_pc = svc_args[6];
+	stacked_xpsr = svc_args[7];
+	 */
+
+	switch(svc_number){
+		case 0: break;
+		case 1: msg_send_svc((void *)stacked_r0);
+				break;
+		default: break;
+	}
+	return;
+
 }
 
 
@@ -238,17 +283,7 @@ void UsageFault_Handler(void)
   }
 }
 
-/**
-  * @brief  This function handles SVCall exception.
-  * @param  None
-  * @retval None
-  */
-void SVC_Handler(void)
-{
-	while (1)
-	{
-	}
-}
+
 
 /**
   * @brief  This function handles Debug Monitor exception.
