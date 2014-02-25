@@ -111,15 +111,15 @@ int msg_send_svc(msg_t *m, unsigned int target_pid, unsigned int block)
         sched_set_status((tcb_t*) active_thread, newstatus);
 
         DEBUG("msg_send: %s: Back from send block.\n", active_thread->name);
-    }
-    else if (target->status == STATUS_RECEIVE_BLOCKED){
-    	copy_msg(m, target->wait_data);
-    	sched_set_status(target, STATUS_PENDING);
-    }
-    else {
+    }else if ((block == 2) & (target->status != STATUS_RECEIVE_BLOCKED)) {
     	DEBUG("msg_reply(): %s: Target \"%s\" not waiting for reply.", active_thread->name, target->name);
     	return -1;
     }
+    else {
+    	copy_msg(m, target->wait_data);
+    	sched_set_status(target, STATUS_PENDING);
+    }
+
 
     thread_yield();
 
