@@ -39,12 +39,34 @@
 typedef struct msg {
     uint16_t     sender_pid;    ///< PID of sending thread. Will be filled in by msg_send
     uint16_t     type;          ///< Type field.
+    uint32_t	 size;			///< Size of the message content, if 0, use content as value not as pointer
     union {
         char     *ptr;          ///< pointer content field
         uint32_t value;         ///< value content field
     } content;
 } msg_t;
 
+int svc_msg_send(msg_t *, unsigned int, unsigned int);
+
+int msg_send_svc(msg_t *, unsigned int, unsigned int);
+
+int svc_msg_send_recieve(msg_t *, char *,  unsigned int );
+
+void set_msg_content_ptr(char *);
+
+int svc_msg_reply(msg_t *, msg_t *);
+
+int svc_msg_try_receive(msg_t *m);
+
+int svc_msg_receive(msg_t *m);
+
+int _svc_msg_receive(msg_t *m, unsigned int block);
+
+int msg_receive_svc(msg_t *m, unsigned int block);
+
+void copy_msg(msg_t *src, msg_t *dst);
+
+int svc_msg_init_queue(msg_t *array, int num);
 
 /**
  * @brief Send a message.

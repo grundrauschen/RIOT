@@ -20,7 +20,11 @@
 #define PRIV_THREAD_MODE    0x0
 
 extern void fk_task_exit(void);
-extern void msg_send_svc(void *);
+extern int msg_send_svc(void *, unsigned int, unsigned int);
+extern void set_msg_content_ptr(char *);
+extern void sched_set_status_svc(unsigned int);
+extern int msg_receive_svc(void *, unsigned int);
+extern int msg_init_queue(void *, int);
 
 unsigned int atomic_set_return(unsigned int* p, unsigned int uiVal) {
 	//unsigned int cspr = disableIRQ();		//crashes
@@ -74,22 +78,21 @@ __attribute__((naked)) void SVC_Handler(void)
 {
 	asm("tst lr,#4"); 		/* Test bit 2 of EXC_RETURN	*/
 	asm("ite eq");
-	asm("mrseq ro, msp"); 	/* if 0, stacking used MSP, copy to R0	*/
-	asm("mrsne ro, psp");	/* if 1, stacking used PSP, copy to R0	*/
+	asm("mrseq r0, msp"); 	/* if 0, stacking used MSP, copy to R0	*/
+	asm("mrsne r0, psp");	/* if 1, stacking used PSP, copy to R0	*/
 	asm("b SVC_Handler_C");
-	asm("align 4");
 }
 
 void SVC_Handler_C(unsigned int *svc_args){
 	uint8_t svc_number;
-	uint32_t stacked_r0; /* , stacked_r1, stacked_r2, stacked_r3, stacked_r12, stacked_lr, stacked_pc, stacked_xpsr */
+	uint32_t stacked_r0, stacked_r1, stacked_r2, stacked_r3; /*, stacked_r12, stacked_lr, stacked_pc, stacked_xpsr */
 
 	svc_number = ((char *) svc_args[6])[-2]; /* Memory[(Stacked PC)-2] */
 	stacked_r0 = svc_args[0];
-	/*
 	stacked_r1 = svc_args[1];
 	stacked_r2 = svc_args[2];
 	stacked_r3 = svc_args[3];
+	/*
 	stacked_r12 = svc_args[4];
 	stacked_lr = svc_args[5];
 	stacked_pc = svc_args[6];
@@ -98,7 +101,20 @@ void SVC_Handler_C(unsigned int *svc_args){
 
 	switch(svc_number){
 		case 0: break;
-		case 1: msg_send_svc((void *)stacked_r0);
+		/* send message 	*/
+		case 1: svc_args[0] = msg_send_svc((void *) stacked_r0, stacked_r1, stacked_r2);
+				break;
+		/* set pointer of return payload	*/
+		case 2: set_msg_content_ptr((char *)stacked_r0);
+				break;
+		/* set status of thread				*/
+		case 3: sched_set_status_svc(stacked_r0);
+				break;
+		/* receive message	*/
+		case 4: msg_receive_svc(stacked_r0, stacked_r1);
+				break;
+		/* initialize message storage	*/
+		case 5: msg_init_queue(stacked_r0, stacked_r1);
 				break;
 		default: break;
 	}

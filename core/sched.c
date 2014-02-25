@@ -188,6 +188,36 @@ void sched_set_status(tcb_t *process, unsigned int status)
     process->status = status;
 }
 
+void sched_set_status_svc(unsigned int status)
+{
+	tcb_t *process = active_thread;
+    if (status &  STATUS_ON_RUNQUEUE) {
+        if (!(process->status &  STATUS_ON_RUNQUEUE)) {
+            DEBUG("adding process %s to runqueue %u.\n", process->name, process->priority);
+            clist_add(&runqueues[process->priority], &(process->rq_entry));
+            runqueue_bitcache |= 1 << process->priority;
+        }
+    }
+    else {
+        if (process->status & STATUS_ON_RUNQUEUE) {
+            DEBUG("removing process %s from runqueue %u.\n", process->name, process->priority);
+            clist_remove(&runqueues[process->priority], &(process->rq_entry));
+
+            if (!runqueues[process->priority]) {
+                runqueue_bitcache &= ~(1 << process->priority);
+            }
+        }
+    }
+
+    process->status = status;
+}
+
+__INLINE void svc_sched_set_status(unsigned int status){
+	asm("ldr r0, %[status]": : [status] "r" (status)); 	/* copy message address	*/
+	asm volatile("svc #0x3");		/*	call svc to set content-ptr	*/
+	return;
+}
+
 void sched_switch(uint16_t current_prio, uint16_t other_prio, int in_isr)
 {
     DEBUG("%s: %i %i %i\n", active_thread->name, (int)current_prio, (int)other_prio, in_isr);

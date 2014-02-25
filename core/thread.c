@@ -192,6 +192,10 @@ int thread_create(int stacksize, char priority, int flags, void (*function)(void
     tcb->msg_waiters.priority = 0;
     tcb->msg_waiters.next = NULL;
 
+    /*msg wait einfügen */
+    tcb->in_msg = (msg_t *)tcb->sp;
+    tcb->sp = tcb->sp - sizeof(msg_t);
+
     cib_init(&(tcb->msg_queue), 0);
     tcb->msg_array = NULL;
 

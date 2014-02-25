@@ -25,6 +25,7 @@
 #include <irq.h>
 #include <cib.h>
 #include <inttypes.h>
+#include <cpu.h>
 
 #include "flags.h"
 
@@ -45,6 +46,82 @@ static int queue_msg(tcb_t *target, msg_t *m)
     }
 
     return 0;
+}
+
+
+__INLINE int svc_msg_send(msg_t *m, unsigned int target_pid, unsigned int block){
+	int ret = 0;
+	asm volatile("ldr r0, %[message]": : [message] "r" (m)); 	/* copy message address	*/
+	asm volatile("ldr r1, %[pid]": : [pid] "r" (target_pid));		/* copy target pid		*/
+	asm volatile("ldr r2, %[block]": : [block] "r" (block)); 	/* copy block			*/
+	asm volatile("svc #0x1");		/*	call svc	*/
+	asm volatile("str r0, %[retv]": [retv] "=r" (ret)); 		/* save return value	*/
+
+	return ret;
+
+}
+
+
+int msg_send_svc(msg_t *m, unsigned int target_pid, unsigned int block)
+{
+    tcb_t *target = (tcb_t*) sched_threads[target_pid];
+
+    m->sender_pid = thread_pid;
+
+    if (m->sender_pid == target_pid) {
+        return -1;
+    }
+
+    if (target == NULL) {
+        return -1;
+    }
+
+    if (target->status != STATUS_RECEIVE_BLOCKED & block != 2) {
+        if (target->msg_array && queue_msg(target, m)) {
+            return 1;
+        }
+
+        if (!block) {
+            DEBUG("msg_send: %s: Receiver not waiting, block=%u\n", active_thread->name, block);
+            return 0;
+        }
+
+        DEBUG("msg_send: %s: send_blocked.\n", active_thread->name);
+        queue_node_t n;
+        n.priority = active_thread->priority;
+        n.data = (unsigned int) active_thread;
+        n.next = NULL;
+        DEBUG("msg_send: %s: Adding node to msg_waiters:\n", active_thread->name);
+
+        queue_priority_add(&(target->msg_waiters), &n);
+
+        active_thread->wait_data = m;
+
+        int newstatus;
+
+        if (active_thread->status == STATUS_REPLY_BLOCKED) {
+            newstatus = STATUS_REPLY_BLOCKED;
+        }
+        else {
+            newstatus = STATUS_SEND_BLOCKED;
+        }
+
+        sched_set_status((tcb_t*) active_thread, newstatus);
+
+        DEBUG("msg_send: %s: Back from send block.\n", active_thread->name);
+    }
+    else if (target->status == STATUS_RECEIVE_BLOCKED){
+    	copy_msg(m, target->wait_data);
+    	sched_set_status(target, STATUS_PENDING);
+    }
+    else {
+    	DEBUG("msg_reply(): %s: Target \"%s\" not waiting for reply.", active_thread->name, target->name);
+    	return -1;
+    }
+
+    thread_yield();
+
+    return 1;
 }
 
 int msg_send(msg_t *m, unsigned int target_pid, bool block)
@@ -152,6 +229,26 @@ int msg_send_receive(msg_t *m, msg_t *reply, unsigned int target_pid)
     return msg_send(m, target_pid, true);
 }
 
+__INLINE int svc_msg_send_recieve(msg_t *m, char *reply,  unsigned int target_pid){
+	tcb_t *me = (tcb_t*) sched_threads[thread_pid];
+	asm volatile("ldr r0, %[reply]": : [reply] "r" (reply)); 	/* copy message address	*/
+	asm volatile("svc #0x2");		/*	call svc to set content-ptr	*/
+	svc_sched_set_status(STATUS_REPLY_BLOCKED);
+
+	/* msg_send blocks until reply received */
+
+	return svg_msg_send(m, target_pid, true);
+}
+
+__INLINE void set_msg_content_ptr(char *ptr){
+	active_thread->in_msg->content.ptr = ptr;
+}
+
+__INLINE int svc_msg_reply(msg_t *m, msg_t *reply)
+{
+    return svc_msg_send(m, m->sender_pid, 2);
+}
+
 int msg_reply(msg_t *m, msg_t *reply)
 {
     int state = disableIRQ();
@@ -194,6 +291,113 @@ int msg_reply_int(msg_t *m, msg_t *reply)
     sched_set_status(target, STATUS_PENDING);
     sched_context_switch_request = 1;
     return 1;
+}
+
+__INLINE int svc_msg_try_receive(msg_t *m)
+{
+    return _svc_msg_receive(m, 0);
+}
+
+__INLINE int svc_msg_receive(msg_t *m)
+{
+    return _svc_msg_receive(m, 1);
+}
+
+__INLINE int _svc_msg_receive(msg_t *m, unsigned int block){
+	int ret = 0;
+	asm volatile("ldr r0, %[message]": : [message] "r" (m)); 	/* copy message address	*/
+	asm volatile("ldr r1, %[block]": : [block] "r" (block)); 	/* copy block			*/
+	asm volatile("svc #0x4");		/*	call svc	*/
+	asm volatile("str r0, %[retv]": [retv] "=r" (ret)); 		/* save return value	*/
+
+	return ret;
+
+}
+
+int msg_receive_svc(msg_t *m, unsigned int block)
+{
+    DEBUG("_msg_receive: %s: _msg_receive.\n", active_thread->name);
+
+    tcb_t *me = active_thread;
+
+    int queue_index = -1;
+
+    if (me->msg_array) {
+        queue_index = cib_get(&(me->msg_queue));
+    }
+
+    /* no message, fail */
+    if ((!block) && (queue_index == -1)) {
+        return -1;
+    }
+
+    if (queue_index >= 0) {
+        DEBUG("_msg_receive: %s: _msg_receive(): We've got a queued message.\n", active_thread->name);
+        *m = me->msg_array[queue_index];
+    }
+    else {
+        me->wait_data = (void *) m;
+    }
+
+    queue_node_t *node = queue_remove_head(&(me->msg_waiters));
+
+    if (node == NULL) {
+        DEBUG("_msg_receive: %s: _msg_receive(): No thread in waiting list.\n", active_thread->name);
+
+        if (queue_index < 0) {
+            DEBUG("_msg_receive(): %s: No msg in queue. Going blocked.\n", active_thread->name);
+            sched_set_status(me, STATUS_RECEIVE_BLOCKED);
+
+            thread_yield();
+
+            /* sender copied message */
+        }
+
+        return 1;
+    }
+    else {
+        DEBUG("_msg_receive: %s: _msg_receive(): Waking up waiting thread.\n", active_thread->name);
+        tcb_t *sender = (tcb_t*) node->data;
+
+        if (queue_index >= 0) {
+            /* We've already got a message from the queue. As there is a
+             * waiter, take it's message into the just freed queue space.
+             */
+            m = &(me->msg_array[cib_put(&(me->msg_queue))]);
+        }
+
+        /* copy msg */
+        msg_t *sender_msg = (msg_t*) sender->wait_data;
+        copy_msg(sender_msg, m);
+
+        /* remove sender from queue */
+        sender->wait_data = NULL;
+        sched_set_status(sender, STATUS_PENDING);
+
+        return 1;
+    }
+}
+
+void copy_msg(msg_t *src, msg_t *dst){
+	unsigned int size = dst->size;
+	unsigned int i;
+	char *dst_data = NULL;
+	tcb_t *sender = (tcb_t *) sched_threads[src->sender_pid];
+	tcb_t *reciever = (tcb_t *) sched_threads[dst->sender_pid];
+	if (size > 0){
+		char *source_data = src->content.ptr;
+	   	char *target_data = dst->content.ptr;
+	   	dst_data = target_data;
+	   	for (i = 0; (i < size) & ((target_data + i) < (char *) reciever->memory->end_address) & (source_data + i < (char *) sender->memory->end_address); i++){
+	   		*(target_data+i) = *(source_data+i);
+	  	}
+	}
+	/* copy msg to target */
+	*dst = *src;
+	if (dst_data != NULL){
+		dst->content.ptr = dst_data;
+	}
+
 }
 
 int msg_try_receive(msg_t *m)
@@ -271,6 +475,17 @@ static int _msg_receive(msg_t *m, int block)
         eINT();
         return 1;
     }
+}
+
+
+__INLINE int svc_msg_init_queue(msg_t *array, int num){
+	int ret = 0;
+	asm volatile("ldr r0, %[array]": : [array] "r" (array)); 	/* copy message address	*/
+	asm volatile("ldr r1, %[num]": : [num] "r" (num)); 	/* copy block			*/
+	asm volatile("svc #0x5");		/*	call svc	*/
+	asm volatile("str r0, %[retv]": [retv] "=r" (ret)); 		/* save return value	*/
+
+	return ret;
 }
 
 int msg_init_queue(msg_t *array, int num)

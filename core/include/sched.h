@@ -38,6 +38,17 @@ void sched_run(void);
  *                          targeted process
  * @param[in]   status      The new status of this thread
  */
+void sched_set_status_svc(unsigned int status);
+
+void svc_sched_set_status(unsigned int status);
+
+/**
+ * @brief   Set the status of the specified process
+ *
+ * @param[in]   process     Pointer to the thread control block of the
+ *                          targeted process
+ * @param[in]   status      The new status of this thread
+ */
 void sched_set_status(tcb_t *process, unsigned int status);
 
 /**

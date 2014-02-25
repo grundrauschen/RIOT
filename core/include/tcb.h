@@ -68,6 +68,7 @@ typedef struct tcb_t {
 	clist_node_t rq_entry;
 
 	void *wait_data;
+	msg_t *in_msg;
 	queue_node_t msg_waiters;
 
 	cib_t msg_queue;
