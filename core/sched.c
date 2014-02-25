@@ -213,7 +213,7 @@ void sched_set_status_svc(unsigned int status)
 }
 
 __INLINE void svc_sched_set_status(unsigned int status){
-	asm("ldr r0, %[status]": : [status] "r" (status)); 	/* copy message address	*/
+	asm("mov r0, %[status]": : [status] "r" (status)); 	/* copy message address	*/
 	asm volatile("svc #0x3");		/*	call svc to set content-ptr	*/
 	return;
 }

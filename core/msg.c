@@ -51,13 +51,15 @@ static int queue_msg(tcb_t *target, msg_t *m)
 
 __INLINE int svc_msg_send(msg_t *m, unsigned int target_pid, unsigned int block){
 	int ret = 0;
-	asm volatile("ldr r0, %[message]": : [message] "r" (m)); 	/* copy message address	*/
-	asm volatile("ldr r1, %[pid]": : [pid] "r" (target_pid));		/* copy target pid		*/
-	asm volatile("ldr r2, %[block]": : [block] "r" (block)); 	/* copy block			*/
+	asm volatile("mov r0, %[message]": : [message] "r" (m)); 	/* copy message address	*/
+	asm volatile("mov r1, %[pid]": : [pid] "r" (target_pid));		/* copy target pid		*/
+	asm volatile("mov r2, %[block]": : [block] "r" (block)); 	/* copy block			*/
 	asm volatile("svc #0x1");		/*	call svc	*/
-	asm volatile("str r0, %[retv]": [retv] "=r" (ret)); 		/* save return value	*/
+	asm volatile("mov %[ret], r0": [ret] "=r" (ret));
 
 	return ret;
+
+
 
 }
 
@@ -231,7 +233,7 @@ int msg_send_receive(msg_t *m, msg_t *reply, unsigned int target_pid)
 
 __INLINE int svc_msg_send_recieve(msg_t *m, char *reply,  unsigned int target_pid){
 	tcb_t *me = (tcb_t*) sched_threads[thread_pid];
-	asm volatile("ldr r0, %[reply]": : [reply] "r" (reply)); 	/* copy message address	*/
+	asm volatile("mov r0, %[reply]": : [reply] "r" (reply)); 	/* copy message address	*/
 	asm volatile("svc #0x2");		/*	call svc to set content-ptr	*/
 	svc_sched_set_status(STATUS_REPLY_BLOCKED);
 
@@ -305,10 +307,10 @@ __INLINE int svc_msg_receive(msg_t *m)
 
 __INLINE int _svc_msg_receive(msg_t *m, unsigned int block){
 	int ret = 0;
-	asm volatile("ldr r0, %[message]": : [message] "r" (m)); 	/* copy message address	*/
-	asm volatile("ldr r1, %[block]": : [block] "r" (block)); 	/* copy block			*/
+	asm volatile("mov r0, %[message]": : [message] "r" (m)); 	/* copy message address	*/
+	asm volatile("mov r1, %[block]": : [block] "r" (block)); 	/* copy block			*/
 	asm volatile("svc #0x4");		/*	call svc	*/
-	asm volatile("str r0, %[retv]": [retv] "=r" (ret)); 		/* save return value	*/
+	asm volatile("mov %[retv], r0": [retv] "=r" (ret)); 		/* save return value	*/
 
 	return ret;
 
@@ -480,10 +482,10 @@ static int _msg_receive(msg_t *m, int block)
 
 __INLINE int svc_msg_init_queue(msg_t *array, int num){
 	int ret = 0;
-	asm volatile("ldr r0, %[array]": : [array] "r" (array)); 	/* copy message address	*/
-	asm volatile("ldr r1, %[num]": : [num] "r" (num)); 	/* copy block			*/
+	asm volatile("mov r0, %[array]": : [array] "r" (array)); 	/* copy message address	*/
+	asm volatile("mov r1, %[num]": : [num] "r" (num)); 	/* copy block			*/
 	asm volatile("svc #0x5");		/*	call svc	*/
-	asm volatile("str r0, %[retv]": [retv] "=r" (ret)); 		/* save return value	*/
+	asm volatile("mov %[retv], r0": [retv] "=r" (ret)); 		/* save return value	*/
 
 	return ret;
 }
