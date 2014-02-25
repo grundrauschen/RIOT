@@ -239,7 +239,7 @@ __INLINE int svc_msg_send_recieve(msg_t *m, char *reply,  unsigned int target_pi
 
 	/* msg_send blocks until reply received */
 
-	return svg_msg_send(m, target_pid, true);
+	return svc_msg_send(m, target_pid, true);
 }
 
 __INLINE void set_msg_content_ptr(char *ptr){
