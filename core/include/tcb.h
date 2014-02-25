@@ -78,7 +78,7 @@ typedef struct tcb_t {
 	uint16_t is_used;
 
 	mem_block_prop mem_block_props[8];
-	unsigned int max_block;
+	unsigned int mem_blocks;
 	unsigned int stack_size;
 
 } tcb_t;

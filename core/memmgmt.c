@@ -209,7 +209,7 @@ unsigned int init_mem_prop(mem_block_prop prop[], memory_block_Type *stack){
 	uint32_t size = ((uint32_t) stack->end_address) - ((uint32_t) stack->start_address);
 	prop[2].size = calculate_size(&size);
 	prop[2].start_address = stack->start_address;
-	return 2;
+	return 3;
 
 }
 

@@ -21,6 +21,8 @@
 #define RO_NO		5
 #define RO_RO		6
 
+#define MAX_ZONES	8
+
 #define MEMSIZE 16384
 
 #define BLOCKCOUNT MAX_CON_THREADS
