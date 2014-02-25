@@ -41,6 +41,8 @@
 */
 int thread_create(int stacksize, char priority, int flags, void (*function) (void), const char *name);
 
+int svc_thread_create(int stacksize, char priority, int flags, void (*function) (void), const char *name);
+
 
 
 /**

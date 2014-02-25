@@ -119,6 +119,23 @@ int thread_measure_stack_usage(char *stack)
     return space;
 }
 
+__INLINE int svc_thread_create(int stacksize, char priority, int flags, void (*function) (void), const char *name){
+	int ret = 0;
+	asm volatile("mov r0, %[stacksize]": : [stacksize] "r" (stacksize));
+	asm volatile("mov r1, %[priority]": : [priority] "r" (priority));
+	asm volatile("mov r2, %[flags]": : [flags] "r" (flags));
+	asm volatile("mov r3, %[function]": : [function] "r" (function));
+	asm volatile("mov r12, %[name]": : [name] "r" (name));
+	asm volatile("svc #0x1");		/*	call svc	*/
+	asm volatile("mov %[ret], r0": [ret] "=r" (ret));
+
+	return ret;
+
+
+
+}
+
+
 int thread_create(int stacksize, char priority, int flags, void (*function)(void), const char *name)
 {
 	tcb_t *tcb = get_tcb();
@@ -191,10 +208,6 @@ int thread_create(int stacksize, char priority, int flags, void (*function)(void
     tcb->msg_waiters.data = 0;
     tcb->msg_waiters.priority = 0;
     tcb->msg_waiters.next = NULL;
-
-    /*msg wait einfügen */
-    tcb->in_msg = (msg_t *)tcb->sp;
-    tcb->sp = tcb->sp - sizeof(msg_t);
 
     cib_init(&(tcb->msg_queue), 0);
     tcb->msg_array = NULL;

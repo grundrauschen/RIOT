@@ -25,6 +25,7 @@ extern void set_msg_content_ptr(char *);
 extern void sched_set_status_svc(unsigned int);
 extern int msg_receive_svc(void *, unsigned int);
 extern int msg_init_queue(void *, int);
+extern int thread_create(int stacksize, char priority, int flags, void (*function) (void), const char *name);
 
 unsigned int atomic_set_return(unsigned int* p, unsigned int uiVal) {
 	//unsigned int cspr = disableIRQ();		//crashes
@@ -85,15 +86,15 @@ __attribute__((naked)) void SVC_Handler(void)
 
 void SVC_Handler_C(unsigned int *svc_args){
 	uint8_t svc_number;
-	uint32_t stacked_r0, stacked_r1, stacked_r2, stacked_r3; /*, stacked_r12, stacked_lr, stacked_pc, stacked_xpsr */
+	uint32_t stacked_r0, stacked_r1, stacked_r2, stacked_r3, stacked_r12; /*, stacked_lr, stacked_pc, stacked_xpsr */
 
 	svc_number = ((char *) svc_args[6])[-2]; /* Memory[(Stacked PC)-2] */
 	stacked_r0 = svc_args[0];
 	stacked_r1 = svc_args[1];
 	stacked_r2 = svc_args[2];
 	stacked_r3 = svc_args[3];
-	/*
 	stacked_r12 = svc_args[4];
+	/*
 	stacked_lr = svc_args[5];
 	stacked_pc = svc_args[6];
 	stacked_xpsr = svc_args[7];
@@ -115,6 +116,9 @@ void SVC_Handler_C(unsigned int *svc_args){
 				break;
 		/* initialize message storage	*/
 		case 5: msg_init_queue(stacked_r0, stacked_r1);
+				break;
+		/* create thread			*/
+		case 6: thread_create((int) stacked_r0, (char) stacked_r1, (int) stacked_r2, (void *) stacked_r3 , (const char *) stacked_r12);
 				break;
 		default: break;
 	}
