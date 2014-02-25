@@ -231,7 +231,7 @@ int msg_send_receive(msg_t *m, msg_t *reply, unsigned int target_pid)
     return msg_send(m, target_pid, true);
 }
 
-__INLINE int svc_msg_send_recieve(msg_t *m, char *reply,  unsigned int target_pid){
+__INLINE int svc_msg_send_recieve(msg_t *m, msg_t *reply,  unsigned int target_pid){
 	tcb_t *me = (tcb_t*) sched_threads[thread_pid];
 	asm volatile("mov r0, %[reply]": : [reply] "r" (reply)); 	/* copy message address	*/
 	asm volatile("svc #0x2");		/*	call svc to set content-ptr	*/
@@ -243,7 +243,7 @@ __INLINE int svc_msg_send_recieve(msg_t *m, char *reply,  unsigned int target_pi
 }
 
 __INLINE void set_msg_content_ptr(char *ptr){
-	active_thread->in_msg->content.ptr = ptr;
+	active_thread->wait_data->content.ptr = ptr;
 }
 
 __INLINE int svc_msg_reply(msg_t *m, msg_t *reply)

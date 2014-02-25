@@ -50,7 +50,7 @@ int svc_msg_send(msg_t *, unsigned int, unsigned int);
 
 int msg_send_svc(msg_t *, unsigned int, unsigned int);
 
-int svc_msg_send_recieve(msg_t *, char *,  unsigned int );
+int svc_msg_send_recieve(msg_t *, msg_t *,  unsigned int );
 
 void set_msg_content_ptr(char *);
 
