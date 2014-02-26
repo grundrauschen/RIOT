@@ -28,6 +28,7 @@
 #include <thread.h>
 #include <memmgmt.h>
 #include <tcb_mgmt.h>
+#include <mpu.h>
 
 #ifdef MODULE_AUTO_INIT
 #include <auto_init.h>
@@ -63,22 +64,14 @@ static char idle_stack[KERNEL_CONF_STACKSIZE_IDLE];
 #define MAIN_FUNC ((void (*) (void))  main)
 #endif
 
-extern const uint32_t user_stack_end;
-extern const uint32_t user_stack_start;
+
 
 void kernel_init(void)
 {
     dINT();
     printf("kernel_init(): This is RIOT! (Version: %s)\n", VERSION);
 
-    uint32_t stack_size = 0;
-    uint32_t start = (uint32_t) &user_stack_start;
-    uint32_t end = (uint32_t) &user_stack_end;
-    stack_size = end;
-    stack_size -= start;
-    printf("User_Stack_start: %#010x\n", &user_stack_start);
-    printf("User_Stack_end: %#010x\n", &user_stack_end);
-    printf("Userprocess Stack Size: %d\n", stack_size);
+
 
     sched_init();
 
@@ -86,6 +79,9 @@ void kernel_init(void)
 
     init_memory_mgmt();
 
+#ifdef USE_MPU
+    enable_mpu_irc();
+#endif
 
     if (thread_create(512, PRIORITY_IDLE, CREATE_WOUT_YIELD | CREATE_STACKTEST, idle_thread, idle_name) < 0) {
         printf("kernel_init(): error creating idle task.\n");
@@ -94,9 +90,7 @@ void kernel_init(void)
     if (thread_create(8192, PRIORITY_MAIN, CREATE_WOUT_YIELD | CREATE_STACKTEST, MAIN_FUNC, main_name) < 0) {
         printf("kernel_init(): error creating main task.\n");
     }
-    else {
-    	/*enable_and_secure_MPU((uint32_t *)main_stack+0x10, 4,1);*/
-    }
+
     eINT();
     printf("kernel_init(): jumping into first task...\n");
     printf("SCB-MMFAR Address: %#010x\n", &SCB->MMFAR);

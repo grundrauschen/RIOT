@@ -15,16 +15,20 @@
 
 #include "cpu.h"
 #include "core_cmFunc.h"
+#include <conf.h>
+#include <memmgmt.h>
+#include <mpu.h>
+#include <msg.h>
 
 #define PRIV_USER_MODE  	0x2
 #define PRIV_THREAD_MODE    0x0
 
 extern void fk_task_exit(void);
-extern int msg_send_svc(void *, unsigned int, unsigned int);
+extern int msg_send_svc(msg_t *, unsigned int, unsigned int);
 extern void set_msg_content_ptr(char *);
 extern void sched_set_status_svc(unsigned int);
-extern int msg_receive_svc(void *, unsigned int);
-extern int msg_init_queue(void *, int);
+extern int msg_receive_svc(msg_t *, unsigned int);
+extern int msg_init_queue(msg_t *, int);
 extern int thread_create(int stacksize, char priority, int flags, void (*function) (void), const char *name);
 
 unsigned int atomic_set_return(unsigned int* p, unsigned int uiVal) {
@@ -61,8 +65,16 @@ void MemManage_Handler(void) {
 __attribute__((naked))void PendSV_Handler(void)
 {
 	save_context();
+#ifdef USE_MPU
+	/* disable MPU */
+	disable_mpu_all_zones();
+#endif
 	/* call scheduler update fk_thread variable with pdc of next thread	 */
 	asm("bl sched_run");
+#ifdef USE_MPU
+	/* enable all defined zones */
+	enable_zones_and_mpu();
+#endif
 	/* the thread that has higest priority and is in PENDING state */
 	restore_context();
 }

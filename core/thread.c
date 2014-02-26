@@ -142,7 +142,7 @@ int thread_create(int stacksize, char priority, int flags, void (*function)(void
     memory_block_Type *thread_stack = create_mem_block(stacksize);
     tcb->memory = thread_stack;
 
-    tcb->max_block = init_mem_prop(tcb->mem_block_props,thread_stack);
+    tcb->mem_blocks = init_mem_prop(tcb->mem_block_props,thread_stack);
 
 
 
