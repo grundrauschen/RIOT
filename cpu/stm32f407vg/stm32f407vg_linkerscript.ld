@@ -35,7 +35,7 @@ __irq_stack_size__     = 0x2000;
 /* Generate a link error if heap and stack don't fit into RAM */
 _Min_Heap_Size = 0;      /* required amount of heap  */
 _Min_Stack_Size = 0x400; /* required amount of stack */
-_User_Stack_Size = 0x4000; /* 16kiB User Stack space */
+_User_Stack_Size = 0x8000; /* 32kiB User Stack space */
 
 /* Specify the memory areas */
 MEMORY
@@ -154,7 +154,7 @@ SECTIONS
 /* Userprocess Stack (managed)*/
   ._user_stack :
   {
-    . = ALIGN(4);
+    . = ALIGN(_User_Stack_Size);
     PROVIDE (user_stack_start = ABSOLUTE(.));
     . = . + _User_Stack_Size;
     . = ALIGN(4);
