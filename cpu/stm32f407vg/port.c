@@ -220,7 +220,7 @@ void sched_task_return(void)
 char *thread_stack_init(void (*task_func)(void), void *stack_start, int stack_size)
 {
 	unsigned int * stk;
-	stk = (unsigned int *)(stack_start + stack_size);
+	stk = (unsigned int *)(stack_start );
 
 	/* marker */
 	stk--;

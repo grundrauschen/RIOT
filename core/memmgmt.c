@@ -72,7 +72,7 @@ __INLINE int ispowerof2(uint32_t x){
 memory_block_Type* add_block(memory_block_Type *current_block , uint32_t *block_start_address, uint32_t *block_end_address ){
 	if (current_block->start_address == block_start_address){
 		/* same start address */
-		if (current_block->next_block->start_address == block_end_address + 4){
+		if ((current_block->next_block != NULL) & (current_block->next_block->start_address == block_end_address + 4)){
 			/* same block */
 			current_block->is_free = 0;
 			return current_block;
@@ -85,6 +85,7 @@ memory_block_Type* add_block(memory_block_Type *current_block , uint32_t *block_
 			next_block->is_free = 1;
 			current_block->end_address = block_end_address;
 			current_block->is_free = 0;
+			current_block->next_block = next_block;
 			return current_block;
 		}
 	}

@@ -92,7 +92,9 @@ void enable_zones_and_mpu(void){
 	unsigned int i;
 	tcb_t *thread = active_thread;
 	MPU_RASR_Type rasr;
+	rasr.w = 0;
 	MPU_RBAR_Type rbar;
+	rbar.w = 0;
 	for (i=0; i < thread->mem_blocks; i++){
 		rbar.b.ADDRESS = align_start_pointer(thread->mem_block_props[i].start_address, thread->mem_block_props[i].size);
 		rbar.b.REGION = i;
@@ -112,11 +114,15 @@ void enable_zones_and_mpu(void){
 
 		MPU_RBAR->w = rbar.w;
 		MPU_RASR->w = rasr.w;
-		DEBUG("Configured Zone %d", i);
+		DEBUG("Configured Zone %d\n", i);
 
 	}
+	__enable_PRIVDEFENA();
+	__disable_HFNMIENA();
+	__DSB();
+	__ISB();
 	__enable_MPU();
-		DEBUG("MPU Enabled ------\n");
+	DEBUG("MPU Enabled ------\n");
 
 }
 
