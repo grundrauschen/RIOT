@@ -10,7 +10,9 @@
 
 #define MAX_CON_THREADS 50
 
-#define USE_MPU
+/*
+ * #define USE_MPU
+*/
 
 
 #endif /* CONF_H_ */
