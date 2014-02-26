@@ -51,6 +51,7 @@ void cpu_switch_context_exit(void){
 }
 
 
+
 void thread_yield(void) {
 	//asm("svc 0x01\n");
 	// set PendSV Bit
@@ -134,10 +135,13 @@ void SVC_Handler_C(unsigned int *svc_args){
 		case 5: msg_init_queue(stacked_r0, stacked_r1);
 				break;
 		/* create thread			*/
-		case 6: thread_create((int) stacked_r0, (char) stacked_r1, (int) stacked_r2, (void *) stacked_r3 , (const char *) stacked_r12);
+		case 6: thread_create_desc(stacked_r0);
 				break;
 		/* thread sleeping and scheduling 	*/
 		case 7: thread_sleep();
+				break;
+		/* context_switch_exit()*/
+		case 8: cpu_switch_context_exit();
 				break;
 		default: break;
 	}

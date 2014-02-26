@@ -218,6 +218,10 @@ __INLINE void svc_sched_set_status(unsigned int status){
 	return;
 }
 
+__INLINE void svc_switch_context_exit(void){
+	asm volatile("svc #0x8");		/*	call svc	*/
+}
+
 void sched_switch(uint16_t current_prio, uint16_t other_prio, int in_isr)
 {
     DEBUG("%s: %i %i %i\n", active_thread->name, (int)current_prio, (int)other_prio, in_isr);

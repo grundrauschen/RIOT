@@ -41,9 +41,19 @@
 */
 int thread_create(int stacksize, char priority, int flags, void (*function) (void), const char *name);
 
-int svc_thread_create(int stacksize, char priority, int flags, void (*function) (void), const char *name);
 
 
+typedef struct thread_description {
+	int stacksize;
+	char priority;
+	int flags;
+	void (*function) (void);
+	const char *name;
+}thread_description;
+
+int svc_thread_create(thread_description*);
+
+int thread_create_desc(thread_description *thread);
 
 /**
  * @brief   returns the status of a process.

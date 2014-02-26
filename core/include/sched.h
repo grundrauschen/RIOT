@@ -67,6 +67,8 @@ void sched_switch(uint16_t current_prio, uint16_t other_prio, int in_isr);
  */
 void cpu_switch_context_exit(void);
 
+void svc_switch_context_exit(void);
+
 /**
  * Flag indicating whether a context switch is necessary after handling an
  * interrupt. Supposed to be set in an ISR.

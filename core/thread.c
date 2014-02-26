@@ -119,13 +119,9 @@ int thread_measure_stack_usage(char *stack)
     return space;
 }
 
-__INLINE int svc_thread_create(int stacksize, char priority, int flags, void (*function) (void), const char *name){
+__INLINE int svc_thread_create(thread_description *thread){
 	int ret = 0;
-	asm volatile("mov r0, %[stacksize]": : [stacksize] "r" (stacksize));
-	asm volatile("mov r1, %[priority]": : [priority] "r" (priority));
-	asm volatile("mov r2, %[flags]": : [flags] "r" (flags));
-	asm volatile("mov r3, %[function]": : [function] "r" (function));
-	asm volatile("mov r12, %[name]": : [name] "r" (name));
+	asm volatile("mov r0, %[thread_description]": : [thread_description] "r" (thread));
 	asm volatile("svc #0x6");		/*	call svc	*/
 	asm volatile("mov %[ret], r0": [ret] "=r" (ret));
 
@@ -133,6 +129,10 @@ __INLINE int svc_thread_create(int stacksize, char priority, int flags, void (*f
 
 
 
+}
+
+__INLINE int thread_create_desc(thread_description *thread){
+	return thread_create(thread->stacksize, thread->priority, thread->flags, thread->function, thread->name);
 }
 
 
