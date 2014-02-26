@@ -43,6 +43,10 @@ unsigned int atomic_set_return(unsigned int* p, unsigned int uiVal) {
 
 void cpu_switch_context_exit(void){
     sched_run();
+#ifdef USE_MPU
+	/* enable all defined zones */
+	enable_zones_and_mpu();
+#endif
     sched_task_return();
 }
 

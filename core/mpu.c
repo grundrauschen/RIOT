@@ -94,8 +94,7 @@ void enable_zones_and_mpu(void){
 	MPU_RASR_Type rasr;
 	MPU_RBAR_Type rbar;
 	for (i=0; i < thread->mem_blocks; i++){
-		unsigned int sizenum = 	calculate_size(&thread->mem_block_props[i].size);
-		rbar.b.ADDRESS = align_start_pointer(thread->mem_block_props[i].start_address, sizenum );
+		rbar.b.ADDRESS = align_start_pointer(thread->mem_block_props[i].start_address, thread->mem_block_props[i].size);
 		rbar.b.REGION = i;
 		rbar.b.VALID = 1;
 		rasr.b.AP = thread->mem_block_props[i].AP;
@@ -105,7 +104,7 @@ void enable_zones_and_mpu(void){
 		rasr.b.C = 1; /* according to book */
 		rasr.b.S = 1; /* according to book */
 		rasr.b.TEX = 0b000; /* according to book */
-		rasr.b.SIZE = sizenum;
+		rasr.b.SIZE = thread->mem_block_props[i].size;
 		rasr.b.ENABLE = 1;
 
 		__DSB(); /* Memory barriers */

@@ -130,7 +130,7 @@ memory_block_Type* create_mem_block(uint32_t size){
 	}
 	if (ispowerof2(size)) {
 		while (further_block) {
-			if (this_block->is_free && (((uint32_t) this_block->end_address - (uint32_t) this_block->start_address) > size )){
+			if (this_block->is_free && (((uint32_t) this_block->end_address - (uint32_t) this_block->start_address) + 4 >= size )){
 				/* if it fits, it sits */
 				if (((uint32_t) this_block->start_address & (size - 1)) == 0 ){
 					uint32_t *end_address = this_block->start_address + (size-1) - 3; /* aligned endadress */
@@ -196,7 +196,7 @@ unsigned int init_mem_prop(mem_block_prop prop[], memory_block_Type *stack){
 	uint32_t n = MEMSIZE;
 	prop[0].AP = RW_RW;
 	prop[0].XN = 0;
-	prop[0].size = 256;
+	prop[0].size = 31;
 	prop[0].start_address = 0;
 	/* safe stacks */
 	prop[1].AP = RW_RO;
@@ -206,7 +206,7 @@ unsigned int init_mem_prop(mem_block_prop prop[], memory_block_Type *stack){
 	/* make thread stack */
 	prop[2].AP = RW_RW;
 	prop[2].XN = 1;
-	uint32_t size = ((uint32_t) stack->end_address) - ((uint32_t) stack->start_address);
+	uint32_t size = ((uint32_t) stack->end_address) - ((uint32_t) stack->start_address) + 4; /* Difference plus 4 Byte for alignment and last byte */
 	prop[2].size = calculate_size(&size);
 	prop[2].start_address = stack->start_address;
 	return 3;
