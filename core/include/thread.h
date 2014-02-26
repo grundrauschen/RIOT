@@ -57,6 +57,8 @@ unsigned int thread_getstatus(int pid);
  */
 const char *thread_getname(int pid);
 
+void svc_thread_sleep(void);
+
 /**
  * @brief   Puts the current thread into sleep mode. Has to be woken up externally.
  */

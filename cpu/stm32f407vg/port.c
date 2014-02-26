@@ -132,6 +132,9 @@ void SVC_Handler_C(unsigned int *svc_args){
 		/* create thread			*/
 		case 6: thread_create((int) stacked_r0, (char) stacked_r1, (int) stacked_r2, (void *) stacked_r3 , (const char *) stacked_r12);
 				break;
+		/* thread sleeping and scheduling 	*/
+		case 7: thread_sleep();
+				break;
 		default: break;
 	}
 	return;
@@ -177,7 +180,7 @@ void sched_task_return(void)
 	mode.w = __get_CONTROL();
 
 	mode.b.SPSEL = 1; // select PSP
-	mode.b.nPRIV = 0; // privilege
+	/*mode.b.nPRIV = 0; // privilege*/
 
 	__set_CONTROL(mode.w);
 

@@ -57,6 +57,10 @@ const char *thread_getname(int pid)
     return sched_threads[pid]->name;
 }
 
+__INLINE void svc_thread_sleep(void){
+	asm volatile("svc #0x7");		/*	call svc	*/
+}
+
 void thread_sleep()
 {
     if (inISR()) {
