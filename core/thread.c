@@ -63,10 +63,6 @@ __INLINE void svc_thread_sleep(void){
 
 void thread_sleep()
 {
-    if (inISR()) {
-        return;
-    }
-
     dINT();
     sched_set_status((tcb_t *)active_thread, STATUS_SLEEPING);
     eINT();
@@ -130,7 +126,7 @@ __INLINE int svc_thread_create(int stacksize, char priority, int flags, void (*f
 	asm volatile("mov r2, %[flags]": : [flags] "r" (flags));
 	asm volatile("mov r3, %[function]": : [function] "r" (function));
 	asm volatile("mov r12, %[name]": : [name] "r" (name));
-	asm volatile("svc #0x1");		/*	call svc	*/
+	asm volatile("svc #0x6");		/*	call svc	*/
 	asm volatile("mov %[ret], r0": [ret] "=r" (ret));
 
 	return ret;
