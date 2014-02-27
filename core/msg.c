@@ -104,6 +104,9 @@ int msg_send_svc(msg_t *m, unsigned int target_pid, unsigned int block)
 
     if (target->status != STATUS_RECEIVE_BLOCKED & block != 2) {
         if (target->msg_array && queue_msg(target, m)) {
+        	if (target->status == STATUS_SLEEPING){
+        	  	thread_wakeup(target_pid);
+        	}
             return 1;
         }
 
