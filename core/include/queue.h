@@ -21,6 +21,7 @@ typedef struct queue_node_t {
     struct queue_node_t *next;
     unsigned int data;
     uint32_t priority;
+    int is_free;
 } queue_node_t;
 
 queue_node_t *queue_remove_head(queue_node_t *root);

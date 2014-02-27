@@ -27,6 +27,7 @@
 #define MESSAGE_SENT 1
 #define MESSAGE_PROCESS_NOT_WAITING 0
 #define MESSAGE_PROCESS_UNKNOWN 2
+#define QUEUE_SIZE 50
 
 /**
  * @brief Describes a message object which can be sent between threads.
@@ -45,6 +46,8 @@ typedef struct msg {
         uint32_t value;         ///< value content field
     } content;
 } msg_t;
+
+queue_node_t queue[QUEUE_SIZE];
 
 int svc_msg_send(msg_t *, unsigned int, unsigned int);
 

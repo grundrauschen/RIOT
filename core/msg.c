@@ -29,7 +29,7 @@
 
 #include "flags.h"
 
-#define ENABLE_DEBUG    (0)
+#define ENABLE_DEBUG    (1)
 #include "debug.h"
 #include "thread.h"
 
@@ -46,6 +46,30 @@ static int queue_msg(tcb_t *target, msg_t *m)
     }
 
     return 0;
+}
+
+void init_queue(void){
+	int i;
+	for (i=0; i < QUEUE_SIZE ; i++){
+		queue[i].is_free = 1;
+	}
+}
+
+queue_node_t* get_node(void){
+	int i;
+	for (i=0; i < QUEUE_SIZE ; i++){
+		if (queue[i].is_free == 1){
+			queue[i].is_free = 0;
+			return &queue[i];
+		}
+
+	}
+	return NULL;
+}
+
+void free_node(queue_node_t *node){
+	node->is_free = 1;
+	return;
 }
 
 
@@ -89,13 +113,13 @@ int msg_send_svc(msg_t *m, unsigned int target_pid, unsigned int block)
         }
 
         DEBUG("msg_send: %s: send_blocked.\n", active_thread->name);
-        queue_node_t n;
-        n.priority = active_thread->priority;
-        n.data = (unsigned int) active_thread;
-        n.next = NULL;
+        queue_node_t *n = get_node();
+        n->priority = active_thread->priority;
+        n->data = (unsigned int) active_thread;
+        n->next = NULL;
         DEBUG("msg_send: %s: Adding node to msg_waiters:\n", active_thread->name);
 
-        queue_priority_add(&(target->msg_waiters), &n);
+        queue_priority_add(&(target->msg_waiters), n);
 
         active_thread->wait_data = m;
 
@@ -106,6 +130,9 @@ int msg_send_svc(msg_t *m, unsigned int target_pid, unsigned int block)
         }
         else {
             newstatus = STATUS_SEND_BLOCKED;
+            if (sched_threads[target_pid]->status == STATUS_SLEEPING){
+            	thread_wakeup(target_pid);
+            }
         }
 
         sched_set_status((tcb_t*) active_thread, newstatus);
@@ -360,6 +387,7 @@ int msg_receive_svc(msg_t *m, unsigned int block)
     else {
         DEBUG("_msg_receive: %s: _msg_receive(): Waking up waiting thread.\n", active_thread->name);
         tcb_t *sender = (tcb_t*) node->data;
+        free_node(node);
 
         if (queue_index >= 0) {
             /* We've already got a message from the queue. As there is a
@@ -382,6 +410,7 @@ int msg_receive_svc(msg_t *m, unsigned int block)
 
 void copy_msg(msg_t *src, msg_t *dst){
 	unsigned int size = dst->size;
+	/*TODO: Doppelte größe Überwachen */
 	unsigned int i;
 	char *dst_data = NULL;
 	tcb_t *sender = (tcb_t *) sched_threads[src->sender_pid];

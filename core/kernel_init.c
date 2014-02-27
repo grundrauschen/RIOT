@@ -79,6 +79,8 @@ void kernel_init(void)
 
     init_memory_mgmt();
 
+    init_queue();
+
 #ifdef USE_MPU
     enable_mpu_irc();
 #endif
