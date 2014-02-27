@@ -68,11 +68,28 @@ __INLINE int ispowerof2(uint32_t x){
 	return x && !(x & (x-1));
 }
 
+__INLINE uint32_t align_pointer(uint32_t old_pointer, unsigned int size){
+	if (ispowerof2(size)){
+		uint32_t pointer;
+		pointer = old_pointer & ~(size - 1);
+		return pointer;
+	}
+}
+
+__INLINE uint32_t align_pointer_next(uint32_t old_pointer, unsigned int size){
+	uint32_t pointer = align_pointer(old_pointer, size);
+	if (old_pointer == pointer ){
+		return pointer;
+	}
+	else {
+		return pointer + size;
+	}
+}
 
 memory_block_Type* add_block(memory_block_Type *current_block , uint32_t *block_start_address, uint32_t *block_end_address ){
 	if (current_block->start_address == block_start_address){
 		/* same start address */
-		if ((current_block->next_block != NULL) & (current_block->next_block->start_address == block_end_address + 4)){
+		if ((current_block->next_block != NULL) & (current_block->next_block->start_address == block_end_address + 1)){
 			/* same block */
 			current_block->is_free = 0;
 			return current_block;
@@ -81,7 +98,7 @@ memory_block_Type* add_block(memory_block_Type *current_block , uint32_t *block_
 			memory_block_Type *next_block = get_free_struct();
 			next_block->end_address = current_block->end_address;
 			next_block->next_block = current_block->next_block;
-			next_block->start_address = block_end_address + 4;
+			next_block->start_address = block_end_address + 1;
 			next_block->is_free = 1;
 			current_block->end_address = block_end_address;
 			current_block->is_free = 0;
@@ -90,13 +107,13 @@ memory_block_Type* add_block(memory_block_Type *current_block , uint32_t *block_
 		}
 	}
 	else {
-		if (current_block->next_block != NULL && current_block->next_block->start_address == block_end_address + 4){
+		if (current_block->next_block != NULL && current_block->next_block->start_address == block_end_address + 1){
 			memory_block_Type *next_block = get_free_struct();
 			next_block->end_address = block_end_address;
 			next_block->start_address = block_start_address;
 			next_block->next_block = current_block->next_block;
 			next_block->is_free = 0;
-			current_block->end_address = block_start_address - 4;
+			current_block->end_address = block_start_address - 1;
 			current_block->next_block = next_block;
 			return next_block;
 		}
@@ -106,13 +123,13 @@ memory_block_Type* add_block(memory_block_Type *current_block , uint32_t *block_
 			after_block->next_block = current_block->next_block;
 			after_block->is_free = 1;
 			after_block->end_address = current_block->end_address;
-			after_block->start_address = block_end_address + 4;
+			after_block->start_address = block_end_address + 1;
 			next_block->next_block = after_block;
 			next_block->end_address = block_end_address;
 			next_block->start_address = block_start_address;
 			next_block->is_free = 0;
 			current_block->next_block = next_block;
-			current_block->end_address = block_start_address - 4;
+			current_block->end_address = block_start_address - 1;
 			return next_block;
 		}
 	}
@@ -131,19 +148,18 @@ memory_block_Type* create_mem_block(uint32_t size){
 	}
 	if (ispowerof2(size)) {
 		while (further_block) {
-			if (this_block->is_free && (((uint32_t) this_block->end_address - (uint32_t) this_block->start_address) + 4 >= size )){
+			uint32_t aligned_pointer = (align_pointer_next((uint32_t) this_block->start_address, size));
+			if (this_block->is_free && ((uint32_t)this_block->end_address - aligned_pointer + 4 >= size )){
 				/* if it fits, it sits */
-				if (((uint32_t) this_block->start_address & (size - 1)) == 0 ){
-					uint32_t *end_address = this_block->start_address + (size-1) - 3; /* aligned endadress */
+				if ((uint32_t) this_block->start_address == aligned_pointer ){
+					uint32_t *end_address = (uint32_t *)((uint32_t)this_block->start_address + (size - 4)); /* aligned endadress */
 					return add_block(this_block, this_block->start_address, end_address);
 				}
 				else {
 					/* align address */
-					uint32_t temp_address;
-					temp_address = (((uint32_t) this_block->start_address) & ((size - 1) ^ 0xffffffff )) + size;
-					if ((((uint32_t) this_block->end_address) - temp_address) > size){
-						uint32_t *end_address = (uint32_t *) (temp_address + (size-1) - 3); /* aligned endadress */
-						return add_block(this_block, (uint32_t *)temp_address, end_address);
+					if ((((uint32_t) this_block->end_address) - aligned_pointer) + 4 >= size){
+						uint32_t *end_address = (uint32_t *) (aligned_pointer + (size  - 4)); /* aligned endadress */
+						return add_block(this_block, (uint32_t *)aligned_pointer, end_address);
 					}
 				}
 			}
@@ -199,17 +215,20 @@ unsigned int init_mem_prop(mem_block_prop prop[], memory_block_Type *stack){
 	prop[0].XN = 0;
 	prop[0].size = 31;
 	prop[0].start_address = 0;
+	DEBUG("MemInit: Block %d: Start: %#010x Size: %d Rights: %d\n",0, prop[0].start_address, prop[0].size, prop[0].AP);
 	/* safe stacks */
 	prop[1].AP = RW_RO;
 	prop[1].XN = 1;
 	prop[1].size = calculate_size(&n);
 	prop[1].start_address = first_mem_block->start_address;
+	DEBUG("MemInit: Block %d: Start: %#010x Size: %d Rights: %d\n",1, prop[1].start_address, prop[1].size, prop[1].AP);
 	/* make thread stack */
 	prop[2].AP = RW_RW;
 	prop[2].XN = 1;
 	uint32_t size = ((uint32_t) stack->end_address) - ((uint32_t) stack->start_address) + 4; /* Difference plus 4 Byte for alignment and last byte */
 	prop[2].size = calculate_size(&size);
 	prop[2].start_address = stack->start_address;
+	DEBUG("MemInit: Block %d: Start: %#010x Size: %d Real Size: %d Rights: %d\n",2, prop[2].start_address, prop[2].size, size, prop[2].AP);
 	return 3;
 
 }

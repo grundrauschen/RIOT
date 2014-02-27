@@ -53,6 +53,10 @@ struct memory_block{
 static memory_block_Type *first_mem_block;
 static memory_block_Type block_array[BLOCKCOUNT];
 
+uint32_t align_pointer(uint32_t old_pointer, unsigned int size);
+
+uint32_t align_pointer_next(uint32_t old_pointer, unsigned int size);
+
 void init_memory_mgmt(void);
 memory_block_Type* create_mem_block(uint32_t);
 void free_mem_block(memory_block_Type *);
