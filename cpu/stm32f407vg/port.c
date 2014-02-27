@@ -51,7 +51,6 @@ void cpu_switch_context_exit(void){
 }
 
 
-
 void thread_yield(void) {
 	//asm("svc 0x01\n");
 	// set PendSV Bit
@@ -141,7 +140,7 @@ void SVC_Handler_C(unsigned int *svc_args){
 		case 7: thread_sleep();
 				break;
 		/* context_switch_exit()*/
-		case 8: cpu_switch_context_exit();
+		case 8: thread_yield();
 				break;
 		default: break;
 	}
