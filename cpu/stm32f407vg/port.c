@@ -62,8 +62,7 @@ void MemManage_Handler(void) {
 	printf("Memory Protection Violation: naughty thread!");
 	__ISB();
 	__DSB();
-	while(1);
-/*	NVIC_SystemReset(); */
+	NVIC_SystemReset();
 }
 
 __attribute__((naked))void PendSV_Handler(void)

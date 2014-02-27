@@ -23,7 +23,7 @@
 
 #define MAX_ZONES	8
 
-#define MEMSIZE 16384
+#define MEMSIZE 32768
 
 #define BLOCKCOUNT MAX_CON_THREADS
 
