@@ -409,26 +409,26 @@ int msg_receive_svc(msg_t *m, unsigned int block)
 }
 
 void copy_msg(msg_t *src, msg_t *dst){
-	unsigned int size = dst->size;
-	/*TODO: Doppelte größe Überwachen */
-	unsigned int i;
-	char *dst_data = NULL;
-	tcb_t *sender = (tcb_t *) sched_threads[src->sender_pid];
-	tcb_t *reciever = (tcb_t *) sched_threads[dst->sender_pid];
-	if (size > 0){
-		char *source_data = src->content.ptr;
-	   	char *target_data = dst->content.ptr;
-	   	dst_data = target_data;
-	   	for (i = 0; (i < size) & ((target_data + i) < (char *) reciever->memory->end_address) & (source_data + i < (char *) sender->memory->end_address); i++){
-	   		*(target_data+i) = *(source_data+i);
-	  	}
+	unsigned int size = src->size;
+	if (dst->size >= src-> size ){
+		unsigned int i;
+		char *dst_data = NULL;
+		tcb_t *sender = (tcb_t *) sched_threads[src->sender_pid];
+		tcb_t *reciever = (tcb_t *) sched_threads[dst->sender_pid];
+		if (size > 0){
+			char *source_data = src->content.ptr;
+			char *target_data = dst->content.ptr;
+			dst_data = target_data;
+			for (i = 0; (i < size) & ((target_data + i) < (char *) reciever->memory->end_address) & (source_data + i < (char *) sender->memory->end_address); i++){
+				*(target_data+i) = *(source_data+i);
+			}
+		}
+		/* copy msg to target */
+		*dst = *src;
+		if (dst_data != NULL){
+			dst->content.ptr = dst_data;
+		}
 	}
-	/* copy msg to target */
-	*dst = *src;
-	if (dst_data != NULL){
-		dst->content.ptr = dst_data;
-	}
-
 }
 
 int msg_try_receive(msg_t *m)
