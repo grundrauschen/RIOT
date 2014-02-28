@@ -30,6 +30,7 @@ extern void sched_set_status_svc(unsigned int);
 extern int msg_receive_svc(msg_t *, unsigned int);
 extern int msg_init_queue(msg_t *, int);
 extern int thread_create(int stacksize, char priority, int flags, void (*function) (void), const char *name);
+extern thread_mem_violation(void);
 
 unsigned int atomic_set_return(unsigned int* p, unsigned int uiVal) {
 	//unsigned int cspr = disableIRQ();		//crashes
@@ -59,10 +60,10 @@ void thread_yield(void) {
 
 void MemManage_Handler(void) {
 
-	printf("Memory Protection Violation: naughty thread!");
 	__ISB();
 	__DSB();
-	NVIC_SystemReset();
+	thread_mem_violation();
+	//NVIC_SystemReset();
 }
 
 __attribute__((naked))void PendSV_Handler(void)

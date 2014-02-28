@@ -20,12 +20,13 @@
 #include "thread.h"
 #include "kernel.h"
 
-#define ENABLE_DEBUG    (0)
+#define ENABLE_DEBUG    (1)
 #include "debug.h"
 #include "kernel_internal.h"
 #include "bitarithm.h"
 #include "hwtimer.h"
 #include "sched.h"
+#include "mpu.h"
 
 
 inline int thread_getpid()
@@ -67,6 +68,7 @@ void thread_sleep()
     sched_set_status((tcb_t *)active_thread, STATUS_SLEEPING);
     eINT();
     thread_yield();
+    return;
 }
 
 int thread_wakeup(int pid)
@@ -120,6 +122,46 @@ __INLINE int svc_thread_create(thread_description *thread){
 
 __INLINE int thread_create_desc(thread_description *thread){
 	return thread_create(thread->stacksize, thread->priority, thread->flags, thread->function, thread->name);
+}
+
+void thread_mem_violation(void){
+	if (active_thread->killed < 3){
+		thread_cleansweep();
+	#ifdef USE_MPU
+		/* enable all defined zones */
+		enable_zones_and_mpu();
+	#endif
+	/* the thread that has higest priority and is in PENDING state */
+	restore_context();
+	}
+	else {
+		sched_set_status(active_thread, STATUS_MPU_KILLED);
+		thread_yield();
+	}
+	return;
+}
+
+void thread_cleansweep(void){
+	tcb_t *tcb = active_thread;
+	tcb->killed = tcb->killed + 1;
+
+    tcb->sp = thread_stack_init(tcb->function, tcb->memory->end_address, tcb->stack_size);
+
+    tcb->rq_entry.data = (unsigned int) tcb;
+    tcb->rq_entry.next = NULL;
+    tcb->rq_entry.prev = NULL;
+
+
+    tcb->wait_data = NULL;
+
+    tcb->msg_waiters.data = 0;
+    tcb->msg_waiters.priority = 0;
+    tcb->msg_waiters.next = NULL;
+
+    cib_init(&(tcb->msg_queue), 0);
+    tcb->msg_array = NULL;
+    return;
+
 }
 
 
@@ -178,6 +220,7 @@ int thread_create(int stacksize, char priority, int flags, void (*function)(void
         return -EOVERFLOW;
     }
 
+    tcb->function = function;
     tcb->sp = thread_stack_init(function, tcb->memory->end_address, stacksize);
     tcb->stack_size = stacksize;
 
@@ -191,6 +234,7 @@ int thread_create(int stacksize, char priority, int flags, void (*function)(void
     tcb->name = name;
 
     tcb->wait_data = NULL;
+    tcb->killed = 0;
 
     tcb->msg_waiters.data = 0;
     tcb->msg_waiters.priority = 0;
@@ -201,7 +245,7 @@ int thread_create(int stacksize, char priority, int flags, void (*function)(void
 
     num_tasks++;
 
-    DEBUG("Created thread %s. PID: %u. Priority: %u.\n", name, cb->pid, priority);
+    DEBUG("Created thread %s. PID: %u. Priority: %u.\n", name, tcb->pid, priority);
 
     if (flags & CREATE_SLEEPING) {
         sched_set_status(tcb, STATUS_SLEEPING);

@@ -55,6 +55,10 @@ int svc_thread_create(thread_description*);
 
 int thread_create_desc(thread_description *thread);
 
+void thread_cleansweep(void);
+
+void thread_mem_violation(void);
+
 /**
  * @brief   returns the status of a process.
  * @return  STATUS_NOT_FOUND if pid is unknown

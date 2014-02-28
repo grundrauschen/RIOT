@@ -250,3 +250,16 @@ void sched_task_exit(void)
     cpu_switch_context_exit();
 }
 
+void sched_task_kill(void)
+{
+    DEBUG("sched_task_kill(): killing task %s...\n", active_thread->name);
+
+    sched_threads[active_thread->pid] = NULL;
+    num_tasks--;
+
+    sched_set_status((tcb_t *)active_thread,  STATUS_STOPPED);
+
+    active_thread = NULL;
+    thread_yield();
+}
+

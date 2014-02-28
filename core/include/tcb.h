@@ -35,6 +35,7 @@
 #define STATUS_SEND_BLOCKED 	(0x0080)
 #define STATUS_REPLY_BLOCKED 	(0x0100)
 #define STATUS_TIMER_WAITING	(0x0200)
+#define STATUS_MPU_KILLED		(0x0400)
 
 /*
 typedef struct tcb_t {
@@ -76,6 +77,8 @@ typedef struct tcb_t {
 	const char *name;
 	memory_block_Type *memory;
 	uint16_t is_used;
+	uint16_t killed;
+	void *function;
 
 	mem_block_prop mem_block_props[8];
 	unsigned int mem_blocks;
