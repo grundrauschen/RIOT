@@ -134,7 +134,7 @@ void SVC_Handler_C(unsigned int *svc_args){
 		case 5: msg_init_queue(stacked_r0, stacked_r1);
 				break;
 		/* create thread			*/
-		case 6: thread_create_desc(stacked_r0);
+		case 6: svc_args[0] = thread_create_desc(stacked_r0);
 				break;
 		/* thread sleeping and scheduling 	*/
 		case 7: thread_sleep();
@@ -144,7 +144,6 @@ void SVC_Handler_C(unsigned int *svc_args){
 				break;
 		default: break;
 	}
-	return;
 
 }
 
