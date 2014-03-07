@@ -17,7 +17,7 @@
 #include <cpu.h>
 #include <math.h>
 
-#define ENABLE_DEBUG (1)
+#define ENABLE_DEBUG (0)
 #include <debug.h>
 
 extern const uint32_t user_stack_end;
