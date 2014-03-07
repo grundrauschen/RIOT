@@ -51,12 +51,35 @@ typedef struct thread_description {
 	const char *name;
 }thread_description;
 
+/**
+ * @brief Creates a new thread via SVC.
+ *
+ * @param   thread description
+ *
+ *
+ * @return  returns <0 on error, pid of newly created task else.
+*/
 int svc_thread_create(thread_description*);
 
+/**
+ * @brief Creates a new thread via SVC.
+ *
+ * @param   thread description
+ *
+ * @return  returns <0 on error, pid of newly created task else.
+*/
 int thread_create_desc(thread_description *thread);
 
+/**
+ * @brief Restarts the running thread
+ *
+*/
 void thread_cleansweep(void);
 
+/**
+ * @brief Restarts the active thread, if not already restarted 2 times, then it kill the thread
+ *
+*/
 void thread_mem_violation(void);
 
 /**

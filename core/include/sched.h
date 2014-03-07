@@ -34,12 +34,14 @@ void sched_run(void);
 /**
  * @brief   Set the status of the specified process
  *
- * @param[in]   process     Pointer to the thread control block of the 
- *                          targeted process
  * @param[in]   status      The new status of this thread
  */
 void sched_set_status_svc(unsigned int status);
 
+/** @brief   Set the status of the specified process via svc
+*
+* @param[in]   status      The new status of this thread
+*/
 void svc_sched_set_status(unsigned int status);
 
 /**
@@ -67,6 +69,9 @@ void sched_switch(uint16_t current_prio, uint16_t other_prio, int in_isr);
  */
 void cpu_switch_context_exit(void);
 
+/**
+ * @brief   Call context switching at task exit via SVC
+ */
 void svc_switch_context_exit(void);
 
 /**

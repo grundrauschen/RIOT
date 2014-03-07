@@ -15,7 +15,7 @@
 /**
  * @file
  * @author      Freie Universität Berlin, Computer Systems & Telematics
- * @author      Kaspar Schleiser <kaspar@schleiser.de>
+ * @author      Kaspar Schleiser <kaspar@schleiser.de>, Tobias Famulla <uni@famulla.eu>
  */
 
 #ifndef __MSG_H
@@ -49,26 +49,114 @@ typedef struct msg {
 
 queue_node_t queue[QUEUE_SIZE];
 
+/**
+ * @brief Send a message via SVC.
+ *
+ * This function sends a message to another thread.
+ * The msg structure has to be allocated (e.g. on the stack)
+ * before calling the function and can be freed afterwards.
+ * If called from an interrupt, this function will never block.
+ *
+ * @param  m Pointer to message structure
+ * @param  target_pid PID of target thread
+ * @param  block If true and receiver is not receive-blocked, function will block. If not, function
+ * returns.
+ *
+ * @return 1 if sending was successful (message delivered directly or to a queue)
+ * @return 0 if receiver is not waiting or has a full message queue and block == false
+ * @return -1 on error (invalid PID)
+ */
 int svc_msg_send(msg_t *, unsigned int, unsigned int);
 
+/**
+ * @brief Internal Kernel-function to send a message.
+ *
+ * This function sends a message to another thread.
+ * The msg structure has to be allocated (e.g. on the stack)
+ * before calling the function and can be freed afterwards.
+ * If called from an interrupt, this function will never block.
+ *
+ * @param  m Pointer to message structure
+ * @param  target_pid PID of target thread
+ * @param  block If true and receiver is not receive-blocked, function will block. If not, function
+ * returns.
+ *
+ * @return 1 if sending was successful (message delivered directly or to a queue)
+ * @return 0 if receiver is not waiting or has a full message queue and block == false
+ * @return -1 on error (invalid PID)
+ */
 int msg_send_svc(msg_t *, unsigned int, unsigned int);
 
+/**
+ * @brief Send a message, block until reply received via SVC.
+ *
+ * This function sends a message to target_pid and then blocks until target has sent a reply.
+ * @note CAUTION!Use this function only when receiver is already waiting. If not use simple msg_send()
+ * @param m pointer to preallocated msg
+ * @param reply pointer to preallocated msg. Reply will be written here.
+ * @param target pid the pid of the target process
+ * @return 1 if successful
+ */
 int svc_msg_send_recieve(msg_t *, msg_t *,  unsigned int );
 
 void set_msg_content_ptr(char *);
 
+/**
+ * @brief Replies to a message via SVC.
+ *
+ * Sender must have sent the message with msg_send_receive().
+ *
+ * @param m msg to reply to.
+ * @param reply message that target will get as reply
+ *
+ * @return 1 if successful
+ * @return 0 on error
+ */
 int svc_msg_reply(msg_t *, msg_t *);
 
+/**
+ * @brief Try to receive a message via SVC.
+ *
+ * This function does not block if no message can be received.
+ * @param m pointer to preallocated msg
+ *
+ * @return 1 if a message was received, -1 otherwise.
+ */
 int svc_msg_try_receive(msg_t *m);
 
+/**
+ * @brief Receive a message via SVC.
+ *
+ * This function blocks until a message was received.
+ * @param m pointer to preallocated msg
+ *
+ * @return 1 Function always succeeds or blocks forever.
+ */
 int svc_msg_receive(msg_t *m);
 
 int _svc_msg_receive(msg_t *m, unsigned int block);
 
+/**
+ * @brief Receive a message.
+ *
+ * This function blocks until a message was received.
+ * @param m pointer to preallocated msg
+ *
+ * @return 1 Function always succeeds or blocks forever.
+ */
 int msg_receive_svc(msg_t *m, unsigned int block);
 
 void copy_msg(msg_t *src, msg_t *dst);
 
+/**
+ * @brief Initialize the current thread's message queue via SVC
+ *
+ * @param array Pointer to preallocated array of msg objects
+ * @param num Number of msg objects in array. MUST BE POWER OF TWO!
+ *
+ * @return 0 if successful
+ * @return -1 on error
+ */
 int svc_msg_init_queue(msg_t *array, int num);
 
 /**

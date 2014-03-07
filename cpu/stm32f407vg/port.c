@@ -8,7 +8,7 @@
  * details.
  *
  * @file
- * @author      Stefan Pfeiffer <pfeiffer@inf.fu-berlin.de>
+ * @author      Stefan Pfeiffer <pfeiffer@inf.fu-berlin.de>, Tobias Famulla <uni@famulla.eu>
  *
  */
 
@@ -100,6 +100,14 @@ __attribute__((naked)) void SVC_Handler(void)
 	asm("b SVC_Handler_C");
 }
 
+/**
+  * @brief  This function handles SVCall exception C-Function.
+  *
+  * Copied from book: The Definitive Guide to ARM Cortex-M3 and ARM Cortex M4 - Joseph Yiu
+  *
+  * @param  None
+  * @retval None
+  */
 void SVC_Handler_C(unsigned int *svc_args){
 	uint8_t svc_number;
 	uint32_t stacked_r0, stacked_r1, stacked_r2, stacked_r3, stacked_r12; /*, stacked_lr, stacked_pc, stacked_xpsr */
@@ -128,10 +136,10 @@ void SVC_Handler_C(unsigned int *svc_args){
 		case 3: sched_set_status_svc(stacked_r0);
 				break;
 		/* receive message	*/
-		case 4: msg_receive_svc(stacked_r0, stacked_r1);
+		case 4: svc_args[0] = msg_receive_svc(stacked_r0, stacked_r1);
 				break;
 		/* initialize message storage	*/
-		case 5: msg_init_queue(stacked_r0, stacked_r1);
+		case 5: svc_args[0] = msg_init_queue(stacked_r0, stacked_r1);
 				break;
 		/* create thread			*/
 		case 6: svc_args[0] = thread_create_desc(stacked_r0);
@@ -140,7 +148,7 @@ void SVC_Handler_C(unsigned int *svc_args){
 		case 7: thread_sleep();
 				break;
 		/* context_switch_exit()*/
-		case 8: thread_yield();
+		case 8: sched_task_exit();
 				break;
 		default: break;
 	}

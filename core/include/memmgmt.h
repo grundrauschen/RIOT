@@ -53,13 +53,40 @@ struct memory_block{
 static memory_block_Type *first_mem_block;
 static memory_block_Type block_array[BLOCKCOUNT];
 
+/** \brief Aligns the pointer to the specified size to the last value
+ *
+ * @param[in]   old_pointer 	pointer to align
+ * @param[in]	size			size the pointer should be aligned to
+ */
+
 uint32_t align_pointer(uint32_t old_pointer, unsigned int size);
 
+/** \brief Aligns the pointer to the specified size to the next value
+ *
+ * @param[in]   old_pointer 	pointer to align
+ * @param[in]	size			size the pointer should be aligned to
+ */
 uint32_t align_pointer_next(uint32_t old_pointer, unsigned int size);
 
+/** \brief Create structures to use managed memory
+ *
+ *
+ */
 void init_memory_mgmt(void);
+
+/** \brief Create structures to use managed memory
+ *
+ * @param[in]   size    size of the memory block (must be power of 2)
+ */
 memory_block_Type* create_mem_block(uint32_t);
+
 void free_mem_block(memory_block_Type *);
+
+/** \brief Initializes the memory access properties
+ *
+ * @param[in]   mem_block_prop[] array of properties in the tcb
+ * @param[in]	stack			pointer to stack of the process
+ */
 unsigned int init_mem_prop(mem_block_prop[], memory_block_Type*);
 
 uint32_t calculate_size(uint32_t *size);
